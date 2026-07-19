@@ -1,9 +1,30 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 
-export const app = new Hono();
+import type { AppEnv } from "./access/session.ts";
+import { requireSession } from "./access/session.ts";
+import { createAuth } from "./auth/index.ts";
 
-app.use("*", cors());
+export const app = new Hono<AppEnv>();
+
+app.use("*", async (context, next) => {
+  const origin = context.env.WEB_ORIGIN;
+
+  const middleware = cors({
+    origin,
+    allowHeaders: ["Content-Type", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  });
+
+  return middleware(context, next);
+});
+
+// Public routes (registered before requireSession)
+app.on(["GET", "POST"], "/api/auth/*", (context) => {
+  const auth = createAuth(context.env);
+  return auth.handler(context.req.raw);
+});
 
 app.get("/", (context) =>
   context.json({
@@ -20,6 +41,23 @@ app.get("/health", (context) =>
     timestamp: new Date().toISOString(),
   }),
 );
+
+// Default: session required for all routes registered below
+app.use("*", requireSession);
+
+app.get("/me", (context) => {
+  const user = context.get("user");
+
+  return context.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image ?? null,
+      emailVerified: user.emailVerified,
+    },
+  });
+});
 
 app.notFound((context) =>
   context.json(

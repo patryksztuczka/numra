@@ -3,7 +3,20 @@
   "name": "numra-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-19",
+  "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true,
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "numra",
+      "database_id": "600e172051b0ad2e4ed216b77b4607d0",
+      "migrations_dir": "drizzle",
+    },
+  ],
+  "vars": {
+    "BETTER_AUTH_URL": "http://localhost:8787",
+    "WEB_ORIGIN": "http://localhost:5173",
   },
 }

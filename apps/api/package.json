@@ -6,16 +6,31 @@
   "scripts": {
     "build": "wrangler deploy --dry-run --outdir dist",
     "clean": "rm -rf dist .wrangler coverage",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply numra --local",
+    "db:migrate:remote": "wrangler d1 migrations apply numra --remote",
+    "db:seed:local": "wrangler d1 execute numra --local --file=./scripts/seed.sql",
+    "db:seed:remote": "wrangler d1 execute numra --remote --file=./scripts/seed.sql",
+    "db:studio": "drizzle-kit studio",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "types": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "4.12.31"
+    "better-auth": "1.6.23",
+    "drizzle-orm": "0.45.2",
+    "hono": "4.12.31",
+    "zod": "4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.18.6",
     "@cloudflare/workers-types": "5.20260719.1",
+    "@types/node": "26.1.1",
+    "@vitest/runner": "4.1.10",
+    "@vitest/snapshot": "4.1.10",
+    "drizzle-kit": "0.31.10",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "wrangler": "4.112.0"
