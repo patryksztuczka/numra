@@ -1,0 +1,41 @@
+apps/api/wrangler.jsonc
+  s_f3f39d4a0abbae::t_b4313c63e724d9 20-21
+apps/api/src/env.ts
+  s_f3f39d4a0abbae::t_b4313c63e724d9 5-6
+apps/web/src/sentry.ts
+  s_f3f39d4a0abbae::t_b4313c63e724d9 1-14
+apps/api/src/test/fixtures.ts
+  s_f3f39d4a0abbae::t_b00856dc432058 14-15
+apps/api/src/app.ts
+  s_f3f39d4a0abbae::t_b4313c63e724d9 15
+apps/api/package.json
+  s_f3f39d4a0abbae::t_782157e2ce9dc9 22
+apps/web/package.json
+  s_f3f39d4a0abbae::t_782157e2ce9dc9 14
+apps/web/.env.example
+  s_f3f39d4a0abbae::t_b4313c63e724d9 2
+apps/api/src/index.ts
+  s_f3f39d4a0abbae::t_b4313c63e724d9 1-2,4,6-18
+README.md
+  s_f3f39d4a0abbae::t_b4313c63e724d9 35-39
+apps/web/src/main.tsx
+  s_f3f39d4a0abbae::t_b4313c63e724d9 5,17-19
+pnpm-lock.yaml
+  s_f3f39d4a0abbae::t_8a6dff7b1c09cb 47-49,52,55,65,86,93-95,98,130-140,927-964,1353-1432,1756-1759,1843-1845,1856-1864,1993-2000,2032-2035,2182-2185,2191-2196,2266-2269,2284-2286,2551-2575,2588,2590,2592,2595,2597,2599,2604,2606,2609,2611,2614,2616,2619,2621,2639,2646,3056-3096,3296-3395,3622-3624,3626-3632,3645,3648,3670-3671,3678-3681,3693,3696,3791-3796,3818-3823,3928-3929,3942-3945,4029-4035,4063-4064,4232,4255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0b49ad94f28ad447d2fd89ceefe202015835ba3f",
+  "prompts": {},
+  "sessions": {
+    "s_f3f39d4a0abbae": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7b7e-dc15-7ac2-a432-62a866d78c71",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
