@@ -11,6 +11,8 @@ export function testEnv(): Env {
     DB: env.DB,
     BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: env.BETTER_AUTH_URL,
+    ENVIRONMENT: "test",
+    SENTRY_DSN: "",
     WEB_ORIGIN: env.WEB_ORIGIN,
   };
 }

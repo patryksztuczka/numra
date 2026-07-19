@@ -1,3 +1,18 @@
-import { app } from "./app.ts";
+import * as Sentry from "@sentry/cloudflare";
 
-export default app;
+import { app } from "./app.ts";
+import type { Env } from "./env.ts";
+
+export default Sentry.withSentry(
+  (env: Env) => ({
+    dsn: env.SENTRY_DSN,
+    environment: env.ENVIRONMENT,
+    sendDefaultPii: false,
+    tracesSampleRate: env.ENVIRONMENT === "production" ? 0.1 : 0,
+    dataCollection: {
+      userInfo: false,
+      httpBodies: [],
+    },
+  }),
+  app,
+);

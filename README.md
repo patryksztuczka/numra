@@ -32,6 +32,11 @@ relying on auth outside local smoke tests.
 The web app runs at `http://localhost:5173` and the Worker API at
 `http://localhost:8787`.
 
+Both apps report errors to separate Sentry projects. The web DSN can be
+overridden with `VITE_SENTRY_DSN`; the API reads `SENTRY_DSN` and
+`ENVIRONMENT` from Wrangler vars. Set `ENVIRONMENT` to `production` in the
+deployed Worker environment to enable 10% performance tracing.
+
 The local seed allowlists `dev@numra.local` so you can sign up immediately.
 
 ## Commands

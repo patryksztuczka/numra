@@ -12,7 +12,7 @@ app.use("*", async (context, next) => {
 
   const middleware = cors({
     origin,
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "sentry-trace", "baggage"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   });
