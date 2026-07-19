@@ -1,0 +1,22 @@
+apps/api/src/app.test.ts
+  s_600dcd7462ef9a::t_01e93ecfcb65fa 95,98-118
+  s_600dcd7462ef9a::t_af847d60752dac 119
+apps/api/src/app.ts
+  s_600dcd7462ef9a::t_3149d5444ec7a9 23,45-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "3cc5ced1d3ed2d090935352d4a63f3773e972d54",
+  "prompts": {},
+  "sessions": {
+    "s_600dcd7462ef9a": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f7b4b-70d2-736d-8c66-32dbf742e480",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
