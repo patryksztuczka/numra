@@ -41,13 +41,7 @@ app.get("/health", (context) =>
   }),
 );
 
-app.get("/me", async (context) => {
-  const denied = await requireSession(context);
-
-  if (denied) {
-    return denied;
-  }
-
+app.get("/me", requireSession, (context) => {
   const user = context.get("user");
 
   return context.json({

@@ -1,4 +1,4 @@
-import type { Context } from "hono";
+import { createMiddleware } from "hono/factory";
 
 import { createAuth, type Auth } from "../auth/index.ts";
 import { createDb } from "../db/index.ts";
@@ -17,7 +17,7 @@ export type AppEnv = {
   Variables: AppVariables;
 };
 
-export async function requireSession(context: Context<AppEnv>) {
+export const requireSession = createMiddleware<AppEnv>(async (context, next) => {
   const auth = createAuth(context.env);
   const result = await auth.api.getSession({
     headers: context.req.raw.headers,
@@ -51,6 +51,5 @@ export async function requireSession(context: Context<AppEnv>) {
 
   context.set("user", result.user);
   context.set("session", result.session);
-
-  return null;
-}
+  return next();
+});
