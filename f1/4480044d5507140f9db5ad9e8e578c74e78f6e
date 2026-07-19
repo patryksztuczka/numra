@@ -1,0 +1,47 @@
+apps/api/src/app.test.ts
+  s_600dcd7462ef9a::t_907cf665c0e67e 1
+apps/api/src/test/apply-migrations.ts
+  s_600dcd7462ef9a::t_ab5d7f85275bfa 1-2
+README.md
+  s_600dcd7462ef9a::t_247c1f666da57e 8,71
+apps/api/package.json
+  s_600dcd7462ef9a::t_93ea612bb0f033 24-25
+apps/api/src/db/index.ts
+  s_600dcd7462ef9a::t_287a2337ff37c7 5
+  s_600dcd7462ef9a::t_f48f6f1765f9c7 1,12-25
+apps/api/src/access/allowlist.ts
+  s_600dcd7462ef9a::t_eb078209f50f4a 2,5-11,14,18,20,25-27
+apps/api/src/test/fixtures.ts
+  s_600dcd7462ef9a::t_7d88cb1a4c431a 1,21-25,32,44
+  s_600dcd7462ef9a::t_287a2337ff37c7 6
+apps/api/src/auth/index.ts
+  s_600dcd7462ef9a::t_1f8a2116ab22fc 4-5,18,33,35,39
+apps/api/scripts/seed.sql
+  s_600dcd7462ef9a::t_03d814956078ca 3
+apps/api/src/db/schema.ts
+  s_600dcd7462ef9a::t_26d29bc2709910 3,18,33,36,42,63,77,87-91
+apps/api/drizzle/0000_youthful_prodigy.sql
+  s_600dcd7462ef9a::t_93ea612bb0f033 1-57
+apps/api/drizzle/meta/0000_snapshot.json
+  s_600dcd7462ef9a::t_12686f6b3ab722 4,7-8,104-107,118-119,151-152,162-163,223-224,230-233,244-245,299-300,310-311
+apps/api/drizzle/meta/_journal.json
+  s_600dcd7462ef9a::t_bda4f3663737a5 8-9
+pnpm-lock.yaml
+  s_600dcd7462ef9a::t_4a586b8298798c 56-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f14480044d5507140f9db5ad9e8e578c74e78f6e",
+  "prompts": {},
+  "sessions": {
+    "s_600dcd7462ef9a": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f7b4b-70d2-736d-8c66-32dbf742e480",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
