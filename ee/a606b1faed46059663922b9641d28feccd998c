@@ -1,0 +1,94 @@
+apps/api/src/app.test.ts
+  s_600dcd7462ef9a::t_838e66f58cb02e 190,193
+  s_600dcd7462ef9a::t_de9fc3dc92975e 1-2,5-67,71,75-77,80-83,85,96,104-163,170-181,188-189,191-192,194-219
+  s_600dcd7462ef9a::t_e3e0af0a212b3c 68-70,72-74
+  s_600dcd7462ef9a::t_0b3015b4c20abf 164-169,182-187
+apps/api/vitest.config.ts
+  s_600dcd7462ef9a::t_7d51235684916e 1-3,7-8,10-12,24-25,30-32,34
+  s_600dcd7462ef9a::t_11f3f8a135ce31 4
+  s_600dcd7462ef9a::t_89a1dee06ddf13 9,13-23,26-29
+apps/web/package.json
+  s_600dcd7462ef9a::t_46221afef93698 14
+apps/api/drizzle.config.ts
+  s_600dcd7462ef9a::t_a11bc22bd91350 1-7
+apps/api/src/test/cloudflare-env.d.ts
+  s_600dcd7462ef9a::t_e66560ee955b05 1-6,11-12
+  s_600dcd7462ef9a::t_f2aa0783d6c9f3 7-10
+apps/web/src/App.tsx
+  s_600dcd7462ef9a::t_acca1d84a5a86c 1,18
+  s_600dcd7462ef9a::t_ea4625af4d9b87 3,5,7,10-17,19-29,31-53,56-60,73,75,81,85,87-88,90,92-94,98-104,106-117,119-128,130-205,210-211
+  s_600dcd7462ef9a::t_11f3f8a135ce31 105
+apps/api/wrangler.jsonc
+  s_600dcd7462ef9a::t_80bfc95f144d39 6,10-20
+  s_600dcd7462ef9a::t_54c557753c18fc 21
+apps/api/src/access/allowlist.ts
+  s_600dcd7462ef9a::t_b097a425bd8d93 1-9,11-24
+  s_600dcd7462ef9a::t_11f3f8a135ce31 10
+apps/api/drizzle/0000_early_jane_foster.sql
+  s_600dcd7462ef9a::t_a9e8de47c29e25 1-57
+apps/api/scripts/seed.sql
+  s_600dcd7462ef9a::t_163b85cc00360b 2
+  s_600dcd7462ef9a::t_3c8d2c4e97cb49 1,3-10
+apps/api/package.json
+  s_600dcd7462ef9a::t_f8c9f47249de57 12-13
+  s_600dcd7462ef9a::t_7768a85621a1ed 29
+  s_600dcd7462ef9a::t_ee8b09d9fbbbfc 9-11,14,18-19,22-23,27,32
+  s_600dcd7462ef9a::t_1acc794a366659 30-31
+apps/api/src/db/index.ts
+  s_600dcd7462ef9a::t_b03b16f925f5c8 1-10
+apps/api/src/db/schema.ts
+  s_600dcd7462ef9a::t_11f3f8a135ce31 7
+  s_600dcd7462ef9a::t_c5f89c65414825 10,13,23,26,55,58,69,72,82
+  s_600dcd7462ef9a::t_1ba78b0917f6f8 1-6,8-9,11-12,14-22,24-25,27-54,56-57,59-68,70-71,73-81,83-92
+apps/web/src/lib/auth-client.ts
+  s_600dcd7462ef9a::t_44e96d2218d7c3 1-7
+apps/api/src/env.ts
+  s_600dcd7462ef9a::t_68c9a720b08fe1 1-6
+apps/api/src/app.ts
+  s_600dcd7462ef9a::t_1348e9aa75971e 4-6,8-26,44-62
+  s_600dcd7462ef9a::t_6833c4efa4eaef 63
+apps/api/tsconfig.json
+  s_600dcd7462ef9a::t_84e6ace8ffcd15 7
+  s_600dcd7462ef9a::t_c90c3bddf9e52f 9
+apps/api/src/access/session.ts
+  s_600dcd7462ef9a::t_06ffc7f3f0f16b 3-4,7,11-12
+  s_600dcd7462ef9a::t_11f3f8a135ce31 8,36
+  s_600dcd7462ef9a::t_cf2aabf4dac874 1-2,5-6,9-10,13-35,37-56
+apps/api/src/test/apply-migrations.ts
+  s_600dcd7462ef9a::t_6b59791d4de9c8 1-2
+  s_600dcd7462ef9a::t_88391be087927f 3
+apps/api/src/test/fixtures.ts
+  s_600dcd7462ef9a::t_11f3f8a135ce31 6
+  s_600dcd7462ef9a::t_39c93008462d7a 10-15
+  s_600dcd7462ef9a::t_1f4aee62a65f54 1-5,7-9,16-65
+README.md
+  s_600dcd7462ef9a::t_2182cd16a20dbf 6-9,22-25,29-31,33-35,49-50,58,63,67-76
+  s_600dcd7462ef9a::t_11f3f8a135ce31 51-57
+  s_600dcd7462ef9a::t_d7809510f4bc3f 77
+apps/api/.dev.vars.example
+  s_600dcd7462ef9a::t_f242d99bbb1e85 1-3
+apps/api/src/auth/index.ts
+  s_600dcd7462ef9a::t_800f19619abb84 1-84
+apps/api/drizzle/meta/0000_snapshot.json
+  s_600dcd7462ef9a::t_d4b663db36220f 1-373
+apps/api/drizzle/meta/_journal.json
+  s_600dcd7462ef9a::t_1ce7b5df194e33 1-13
+pnpm-lock.yaml
+  s_600dcd7462ef9a::t_a2b49f5a68a2e1 47-52,57-59,63-74,80,87-89,99,108,117,121-199,213-219,257-259,269-282,289-300,307-318,325-336,343-354,361-372,379-390,397-408,415-426,433-444,451-462,469-480,487-498,505-516,523-534,541-552,559-570,577-582,589-600,607-612,619-630,637-642,649-660,667-678,685-696,703-714,899-910,1441-1443,1618-1687,1691-1693,1698-1700,1711-1713,1718-1813,1824-1833,1860-1862,1874-1876,1881-1884,2026-2029,2090-2092,2098-2100,2109-2111,2123-2129,2214-2218,2228-2230,2360-2365,2368-2422,2431-2445,2467-2468,2480,2485,2487-2495,2501-2506,2510-2515,2519-2524,2528-2533,2537-2542,2546-2551,2555-2560,2564-2569,2573-2578,2582-2587,2591-2596,2600-2605,2609-2614,2618-2623,2627-2632,2636-2641,2645-2647,2651-2656,2660-2662,2666-2671,2675-2677,2681-2686,2690-2695,2699-2704,2708-2713,2801,2844-2849,3114,3119,3153-3156,3225,3228,3239,3245,3273-3310,3313-3314,3317-3318,3325-3326,3329-3340,3350-3403,3446-3449,3456-3457,3460-3461,3572-3573,3653-3654,3676-3677,3682-3683,3719-3725,3787-3792,3825-3826,3833,3841,3845,3847,3850,3867,3869-3870,3918-3921
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "eea606b1faed46059663922b9641d28feccd998c",
+  "prompts": {},
+  "sessions": {
+    "s_600dcd7462ef9a": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f7b4b-70d2-736d-8c66-32dbf742e480",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
