@@ -20,6 +20,7 @@ app.use("*", async (context, next) => {
   return middleware(context, next);
 });
 
+// Public routes (registered before requireSession)
 app.on(["GET", "POST"], "/api/auth/*", (context) => {
   const auth = createAuth(context.env);
   return auth.handler(context.req.raw);
@@ -41,7 +42,10 @@ app.get("/health", (context) =>
   }),
 );
 
-app.get("/me", requireSession, (context) => {
+// Default: session required for all routes registered below
+app.use("*", requireSession);
+
+app.get("/me", (context) => {
   const user = context.get("user");
 
   return context.json({

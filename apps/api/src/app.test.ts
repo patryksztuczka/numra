@@ -92,8 +92,30 @@ describe("api", () => {
     });
   });
 
-  it("returns a structured 404", async () => {
+  it("requires authentication before revealing missing routes", async () => {
     const response = await app.request("/missing", undefined, env);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "unauthorized",
+      message: "Authentication is required.",
+    });
+  });
+
+  it("returns a structured 404 for authenticated missing routes", async () => {
+    await allowEmail("operator@numra.test");
+    const signUpResponse = await signUp("operator@numra.test");
+    const cookie = cookieHeaderFromResponse(signUpResponse);
+
+    const response = await app.request(
+      "/missing",
+      {
+        headers: {
+          cookie,
+        },
+      },
+      env,
+    );
 
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
