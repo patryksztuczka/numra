@@ -1,10 +1,8 @@
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 
-import { isEmailAllowlisted, normalizeEmail } from "../access/allowlist.ts";
-import { createDb } from "../db/index.ts";
-import { schema } from "../db/schema.ts";
+import { authEmailBodySchema, isEmailAllowlisted, normalizeEmail } from "../access/allowlist.ts";
+import { createAuthAdapter, createDb } from "../db/index.ts";
 import type { Env } from "../env.ts";
 
 const allowlistDeniedMessage = "This email address is not allowed to access Numra.";
@@ -17,10 +15,7 @@ export function createAuth(env: Env) {
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
     trustedOrigins: [env.WEB_ORIGIN],
-    database: drizzleAdapter(db, {
-      provider: "sqlite",
-      schema,
-    }),
+    database: createAuthAdapter(db),
     emailAndPassword: {
       enabled: true,
     },
@@ -35,19 +30,13 @@ export function createAuth(env: Env) {
           return;
         }
 
-        const email =
-          typeof ctx.body === "object" &&
-          ctx.body !== null &&
-          "email" in ctx.body &&
-          typeof ctx.body.email === "string"
-            ? ctx.body.email
-            : undefined;
+        const parsed = authEmailBodySchema.safeParse(ctx.body);
 
-        if (!email) {
+        if (!parsed.success) {
           return;
         }
 
-        const allowed = await isEmailAllowlisted(db, email);
+        const allowed = await isEmailAllowlisted(db, parsed.data.email);
 
         if (!allowed) {
           throw new APIError("FORBIDDEN", {

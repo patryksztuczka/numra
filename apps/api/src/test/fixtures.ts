@@ -1,9 +1,9 @@
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 
 import { normalizeEmail } from "../access/allowlist.ts";
 import { createDb } from "../db/index.ts";
-import { account, allowedEmail, session, user, verification } from "../db/schema.ts";
+import { accounts, allowedEmails, sessions, users, verifications } from "../db/schema.ts";
 import type { Env } from "../env.ts";
 
 export function testEnv(): Env {
@@ -18,18 +18,18 @@ export function testEnv(): Env {
 export async function resetAuthState() {
   const db = createDb(testEnv());
 
-  await db.delete(session);
-  await db.delete(account);
-  await db.delete(verification);
-  await db.delete(user);
-  await db.delete(allowedEmail);
+  await db.delete(sessions);
+  await db.delete(accounts);
+  await db.delete(verifications);
+  await db.delete(users);
+  await db.delete(allowedEmails);
 }
 
 export async function allowEmail(email: string, note?: string) {
   const db = createDb(testEnv());
   const normalized = normalizeEmail(email);
 
-  await db.insert(allowedEmail).values({
+  await db.insert(allowedEmails).values({
     id: crypto.randomUUID(),
     email: normalized,
     note: note ?? null,
@@ -41,7 +41,7 @@ export async function revokeEmail(email: string) {
   const db = createDb(testEnv());
   const normalized = normalizeEmail(email);
 
-  await db.delete(allowedEmail).where(eq(allowedEmail.email, normalized));
+  await db.delete(allowedEmails).where(eq(allowedEmails.email, normalized));
 }
 
 export function extractSetCookie(response: Response): string[] {

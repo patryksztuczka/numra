@@ -1,6 +1,6 @@
 -- Seed allowlisted emails for local development.
 -- Apply with: pnpm --filter @numra/api db:seed:local
-INSERT OR IGNORE INTO allowed_email (id, email, note, created_at)
+INSERT OR IGNORE INTO allowed_emails (id, email, note, created_at)
 VALUES
   (
     'seed_allowed_dev',

@@ -5,7 +5,7 @@ React, and Tailwind CSS web app. Both applications use TypeScript 7.
 
 Identity uses [Better Auth](https://www.better-auth.com/) with email/password,
 Cloudflare D1, and Drizzle. Sign-up and sign-in are limited to emails stored in
-the `allowed_email` table.
+the `allowed_emails` table.
 
 ## Requirements
 
@@ -68,7 +68,7 @@ apps/
 
 - Better Auth is mounted at `/api/auth/*` on the API Worker.
 - `GET /me` returns the current user when a valid allowlisted session exists.
-- Allowlist rows live in D1 (`allowed_email`). Exact emails only; values are
+- Allowlist rows live in D1 (`allowed_emails`). Exact emails only; values are
   compared after trim + lowercase normalization.
 - Removing an email from the allowlist blocks future sign-in and rejects `/me`
   for existing sessions (and signs them out).
