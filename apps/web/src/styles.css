@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+:root {
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  color-scheme: light;
+  --paper: #edf3fa;
+  --panel: #f8fbff;
+  --ink: #101c2c;
+  --soft-ink: #3f4e62;
+  --muted: #718198;
+  --rule: #c8d4e2;
+  --blue: #1557ff;
+  --sky: #8bb8ff;
+  --signal: #24c17b;
+  background: var(--paper);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.page-grid {
+  background-image: linear-gradient(to right, rgb(16 28 44 / 0.035) 1px, transparent 1px);
+  background-size: min(11vw, 156px) 100%;
+}
+
+.wordmark {
+  font-family: "Arial Narrow", "Avenir Next Condensed", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+}
+
+.wordmark span {
+  color: var(--blue);
+  padding-inline: 0.12em;
+}
+
+.focus-ring:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 4px;
+}
+
+.status-rail {
+  box-shadow: 12px 12px 0 rgb(21 87 255 / 0.14);
+}
+
+.orbit {
+  position: absolute;
+  width: 19rem;
+  height: 19rem;
+  right: -5rem;
+  top: -7rem;
+  border: 1px solid rgb(139 184 255 / 0.45);
+  border-radius: 50%;
+}
+
+.orbit::before,
+.orbit::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgb(139 184 255 / 0.3);
+  border-radius: 50%;
+}
+
+.orbit::before {
+  inset: 3rem;
+}
+
+.orbit::after {
+  inset: 6rem;
+  background: var(--blue);
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms;
+  }
+}

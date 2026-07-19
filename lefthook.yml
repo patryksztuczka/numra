@@ -1,0 +1,19 @@
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: "*.{js,jsx,ts,tsx,json,jsonc,css,md,yml,yaml}"
+      run: pnpm exec oxfmt --check --no-error-on-unmatched-pattern {staged_files}
+    lint:
+      glob: "*.{js,jsx,ts,tsx}"
+      run: pnpm exec oxlint --deny-warnings {staged_files}
+    dependencies:
+      glob: "{package.json,apps/*/package.json,pnpm-workspace.yaml}"
+      run: pnpm deps:check
+
+pre-push:
+  commands:
+    check:
+      run: pnpm check
+    test:
+      run: pnpm test

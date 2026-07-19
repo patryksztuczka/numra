@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/syncpackrc",
+  "semverGroups": [
+    {
+      "label": "Use exact versions",
+      "range": "",
+      "dependencies": ["**"]
+    }
+  ],
+  "sortAz": ["contributors", "dependencies", "devDependencies", "peerDependencies", "scripts"]
+}
