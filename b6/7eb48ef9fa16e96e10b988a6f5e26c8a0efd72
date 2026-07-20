@@ -1,0 +1,108 @@
+apps/web/vite.config.ts
+  s_540441a22ebee8::t_bb85c622ff701a 9-10,12-15
+apps/api/src/index.ts
+  s_540441a22ebee8::t_8682521b721e7d 6-13,22-23
+apps/api/src/finance/finance.test.ts
+  s_540441a22ebee8::t_7f62d334e095b8 1-2,4-9,12-15,55-69,71-84,89-101,107-108,113-150,152-169,171-177,179-183,185-234,236-260,263-289,291-332,334-357,359-364,366-399,401-403
+  s_540441a22ebee8::t_2a2a5e3bcc9d43 102-104,106,109-112
+  s_540441a22ebee8::t_9921176c393860 3,10,16-54,70,85-88,105,151,170,178,184,235,261-262,290,333,358,365,400
+  s_540441a22ebee8::t_7ef1260bf367ac 11
+apps/api/src/finance/crypto.ts
+  s_540441a22ebee8::t_76cdf7abdf28dd 1-12,14-35
+  s_540441a22ebee8::t_f4e6d67a00a9ee 13
+apps/api/vitest.config.ts
+  s_540441a22ebee8::t_282a2a94669534 23-28
+apps/api/src/workflows/ledger-sync.ts
+  s_540441a22ebee8::t_46de43b17f8e25 1-13,15-29,31-37
+  s_540441a22ebee8::t_d259c270557534 14,30
+apps/api/src/db/schema.ts
+  s_540441a22ebee8::t_6205d2ba7e82d7 1,86-178,180-182,189-191,193-195
+  s_540441a22ebee8::t_f361063b1fd7f7 179
+apps/api/src/env.ts
+  s_540441a22ebee8::t_50cfa81dde3b9e 3,9-14
+apps/api/src/test/fake-enable-banking.ts
+  s_540441a22ebee8::t_0f88e0dcf98060 1-133
+apps/api/src/test/cloudflare-env.d.ts
+  s_540441a22ebee8::t_280fc753eb8a64 4,8-12
+apps/api/src/finance/money.ts
+  s_540441a22ebee8::t_1e9752951dee22 1-29
+apps/api/src/enable-banking/jwt.ts
+  s_540441a22ebee8::t_d39804f22bfbe9 1-32
+apps/api/src/finance/transactions.ts
+  s_540441a22ebee8::t_7fdd918980cb9c 1-42,44-47,50-69,71-73
+  s_540441a22ebee8::t_c2bce47600b908 43,48-49,70
+apps/web/src/App.tsx
+  s_540441a22ebee8::t_fc8cfbb0253e9b 187,191
+  s_540441a22ebee8::t_13e08563096105 3-16,20,24-44,53-65,82-83,93-94,110-111,119-186,188-190,192,196-206,208-214,216-218,221-223,225,228-231,233-234,238-239,245-731
+  s_540441a22ebee8::t_56c53e1da5e442 1
+apps/api/src/enable-banking/client.ts
+  s_540441a22ebee8::t_0db63209b32872 10,30,34,36-37,54-67,70-71,75,77,99-104,107,150-152,161-163,180,188-192,213-245,254-255,264-271,276
+  s_540441a22ebee8::t_6fab005ac1a27a 3-9,11-12,78-80,82-86,92-93,98,108-113,122-129,131-134,136-148,153-155,157-159,193-211,277-279
+  s_540441a22ebee8::t_696a5f5d94abe4 68-69,94-97
+  s_540441a22ebee8::t_fc21bef96290c1 1-2,13-29,31-33,35,38-53,72-74,76,81,87-91,105-106,114-121,130,135,149,156,160,212
+  s_540441a22ebee8::t_3a4d3a7d032d10 164-179,181-187,246-253,256-263,272-275
+apps/api/src/enable-banking/types.ts
+  s_540441a22ebee8::t_53b8d901ed0199 1-58,60,62-95
+  s_540441a22ebee8::t_00687652498287 59,61
+apps/api/src/finance/connections.ts
+  s_540441a22ebee8::t_aad701734c610d 5,98,115,121,134,147
+  s_540441a22ebee8::t_42d1a52fd559ed 1-4,6-97,99-114,116-120,122-133,135-146,148-245
+apps/api/package.json
+  s_540441a22ebee8::t_7aebe5953a8f73 26
+apps/api/src/finance/etl.ts
+  s_540441a22ebee8::t_0e6fefe10dfdd1 163,166-169
+  s_540441a22ebee8::t_9fda1f80239f92 3-4,27-30,48,63,75,81,91,104,116,119,129,172,177
+  s_540441a22ebee8::t_705ab5376253f5 1-2,5-26,31-47,49-62,64-74,76-80,82-90,92-103,105-115,117-118,120-128,130-162,164-165,170-171,173-176,178-233
+README.md
+  s_540441a22ebee8::t_cd4176e6fbde0a 10-14,35-46,84,88-97,107-108
+apps/api/src/test/fixtures.ts
+  s_540441a22ebee8::t_b91cc78877c99d 6-15,18-21,24,30-35,42-44
+apps/api/drizzle/0001_secret_yellow_claw.sql
+  s_540441a22ebee8::t_f86dd8f88fa467 2-3,13-14,16-17,19-54
+  s_540441a22ebee8::t_62c92effa604da 1,4-12,15,18
+apps/api/src/app.ts
+  s_540441a22ebee8::t_f0b5efa159407a 7,46,48,66
+  s_540441a22ebee8::t_b772b5ce6aebbe 47,67
+apps/api/src/finance/routes.ts
+  s_540441a22ebee8::t_29b8332641b776 1-122,134-138,140-175,177-180,182-187
+  s_540441a22ebee8::t_5c4f2bdd0195c5 123-133,139
+  s_540441a22ebee8::t_b4c4478c561887 176,181
+apps/api/src/enable-banking/index.ts
+  s_540441a22ebee8::t_e235aad8c778c8 1-26
+apps/api/wrangler.jsonc
+  s_540441a22ebee8::t_603495dc1102e6 14
+  s_540441a22ebee8::t_56a317f6034afe 18-25,31-32
+apps/api/src/finance/normalize.ts
+  s_540441a22ebee8::t_8beb2858626bf8 1-25,27-92
+  s_540441a22ebee8::t_a92b464285f922 26
+apps/web/package.json
+  s_540441a22ebee8::t_0e58213acff5f9 17-18
+apps/web/src/lib/api.ts
+  s_540441a22ebee8::t_d2bcce9d6498b8 3-13,102,104,115-118,122-128,130-131,134-135,138-139,141-145,149-150,153-154,158-159,161-198
+  s_540441a22ebee8::t_54afbf65a58e79 1-2,14-95,105,119-121,129,132-133,136-137,140,146-148,151-152,155-157,160
+  s_540441a22ebee8::t_cdb37a896e0c20 96-101,103,106-114
+apps/api/.dev.vars.example
+  s_540441a22ebee8::t_2fb17e24c1e890 4-10
+apps/api/drizzle/meta/0001_snapshot.json
+  s_540441a22ebee8::t_9cd1438bc14112 1-730
+apps/api/drizzle/meta/_journal.json
+  s_540441a22ebee8::t_f0266da74f5a9b 11-17
+pnpm-lock.yaml
+  s_540441a22ebee8::t_859294639f649e 59-61,108-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "b67eb48ef9fa16e96e10b988a6f5e26c8a0efd72",
+  "prompts": {},
+  "sessions": {
+    "s_540441a22ebee8": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f7f01-90f1-7444-9b17-404fed0ab7b7",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
