@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { App } from "./App.tsx";
+import { Sentry } from "./sentry.ts";
 
 import "./styles.css";
 
@@ -13,6 +14,8 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <Sentry.ErrorBoundary fallback={<p>Something went wrong.</p>}>
+      <App />
+    </Sentry.ErrorBoundary>
   </StrictMode>,
 );

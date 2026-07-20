@@ -17,6 +17,8 @@
   ],
   "vars": {
     "BETTER_AUTH_URL": "http://localhost:8787",
+    "ENVIRONMENT": "development",
+    "SENTRY_DSN": "https://528f99e809b93c305c7c81a3f15dee4b@o4511763138936832.ingest.de.sentry.io/4511763145556048",
     "WEB_ORIGIN": "http://localhost:5173",
   },
 }
