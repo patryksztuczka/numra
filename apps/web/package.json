@@ -14,7 +14,8 @@
     "@sentry/react": "10.66.0",
     "better-auth": "1.6.23",
     "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react-dom": "19.2.7",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
