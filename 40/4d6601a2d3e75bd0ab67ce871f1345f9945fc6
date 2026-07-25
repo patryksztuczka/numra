@@ -1,0 +1,33 @@
+apps/web/src/App.tsx
+  s_aa14558e5b836a::t_f52d40090628c0 151-152,160-163,165-172,176
+  s_aa14558e5b836a::t_de7339878a3912 3,153-159,180-183,188
+  s_aa14558e5b836a::t_276a9960f3f327 21,29-32,39,41-42,84,95,112,164
+apps/web/src/styles.css
+  s_aa14558e5b836a::t_f15c17c5b22d59 75-114
+  s_aa14558e5b836a::t_67cf08d7a9d493 156-158
+  s_aa14558e5b836a::t_f784fc52acd0e5 62-74
+apps/web/src/components/navbar.tsx
+  s_aa14558e5b836a::t_3236d88574354c 173-176
+  s_aa14558e5b836a::t_299c46bed1a470 1,117-123,126-163,177-194,200-206,208-209,211-212
+  s_aa14558e5b836a::t_988f896e63521a 53,57-59,61
+  s_aa14558e5b836a::t_eaf9c6ec82ba73 92,109,228-230
+  s_aa14558e5b836a::t_2f449fc011f373 94-99
+  s_aa14558e5b836a::t_6db69a6b9882b6 2,4-20,22-52,54-56,60,62-91,93,100-108,110-116,124-125,164-172,195-199,207,210,213-227,231-254
+  s_aa14558e5b836a::t_fa9360777b2b5c 3,21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "404d6601a2d3e75bd0ab67ce871f1345f9945fc6",
+  "prompts": {},
+  "sessions": {
+    "s_aa14558e5b836a": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9a9c-f0ca-7b8c-90b7-bd3bd636493a",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
