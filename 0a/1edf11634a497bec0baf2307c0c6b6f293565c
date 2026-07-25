@@ -1,0 +1,21 @@
+apps/web/src/App.tsx
+  s_d7222be93dc5e4::t_00683822764ca0 396-422,425,427,438,448-450,453,457,468-473,496,508,512-553
+apps/api/src/finance/connections.ts
+  s_d7222be93dc5e4::t_8e1e12468c991d 51-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "0a1edf11634a497bec0baf2307c0c6b6f293565c",
+  "prompts": {},
+  "sessions": {
+    "s_d7222be93dc5e4": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9a94-b850-7225-8f69-2215f8d61b0b",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
