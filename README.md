@@ -24,14 +24,14 @@ engines. The pnpm version is pinned with the `packageManager` field.
 
 ```sh
 pnpm install
-cp apps/api/.dev.vars.example apps/api/.dev.vars
+cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
 pnpm --filter @numra/api db:migrate:local
 pnpm --filter @numra/api db:seed:local
 pnpm dev
 ```
 
-Edit `apps/api/.dev.vars` and set a long random `BETTER_AUTH_SECRET` before
+Edit `apps/api/.env` and set a long random `BETTER_AUTH_SECRET` before
 relying on auth outside local smoke tests. For bank connect, also set:
 
 - `ENABLE_BANKING_APPLICATION_ID` / `ENABLE_BANKING_PRIVATE_KEY` (RS256 PEM)
