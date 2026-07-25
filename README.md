@@ -92,7 +92,9 @@ apps/
   accounts, and enqueues the ledger sync workflow (inline ETL fallback in tests).
 - `GET /connections`, `GET /accounts`, `GET /transactions` are session-scoped
   read models over D1.
-- Hourly schedule: Workflow binding `LEDGER_SYNC_WORKFLOW` (`0 * * * *`).
+- Workflow binding `LEDGER_SYNC_WORKFLOW` runs post-connect sync. An hourly
+  cron (`0 * * * *`) needs a paid Workers plan — restore `schedules` in
+  `apps/api/wrangler.jsonc` after upgrading.
 - Money is stored as integer minor units + currency code.
 
 ## Auth notes
@@ -104,11 +106,35 @@ apps/
 - Removing an email from the allowlist blocks future sign-in and rejects `/me`
   for existing sessions (and signs them out).
 - Configure production secrets with Wrangler (`BETTER_AUTH_SECRET`,
-  `BETTER_AUTH_URL`, `WEB_ORIGIN`, Enable Banking credentials, `ENCRYPTION_KEY`)
-  and point the D1 binding at a real database.
+  Enable Banking credentials, `ENCRYPTION_KEY`). Public config lives in
+  `apps/api/wrangler.jsonc` vars (`BETTER_AUTH_URL`, `WEB_ORIGIN`, …).
+  Local `wrangler dev` overrides those via `apps/api/.dev.vars`.
 
-Deploy the API after authenticating Wrangler:
+## Production (Cloudflare Workers)
+
+Live API:
+
+- URL: https://numra-api.patryk-sztuczka00.workers.dev
+- Worker: `numra-api`
+- D1: `numra` (`665a7fa0-943b-4e3e-b148-d95ea6496603`)
+- Workflow: `numra-ledger-sync` (no cron on free plan)
+- Secrets: `BETTER_AUTH_SECRET`, `ENABLE_BANKING_APPLICATION_ID`,
+  `ENABLE_BANKING_PRIVATE_KEY`, `ENCRYPTION_KEY`
+
+Register this Enable Banking redirect URL on the application:
+
+`https://numra-api.patryk-sztuczka00.workers.dev/connections/enable-banking/callback`
+
+`WEB_ORIGIN` is currently `http://localhost:5173` so the local web app can
+call the hosted API. Point it at the real web origin when the frontend is
+deployed.
+
+Redeploy after authenticating Wrangler (`wrangler login` or
+`CLOUDFLARE_API_TOKEN`):
 
 ```sh
 pnpm --filter @numra/api deploy
+pnpm --filter @numra/api db:migrate:remote
+# secrets (once, or when rotating)
+# pnpm --filter @numra/api exec wrangler secret put BETTER_AUTH_SECRET
 ```

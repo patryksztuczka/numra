@@ -4,6 +4,8 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-07-19",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": true,
   "observability": {
     "enabled": true,
   },
@@ -15,20 +17,24 @@
       "migrations_dir": "drizzle",
     },
   ],
+  // Hourly `schedules` require a paid Workers plan. Keep the binding so
+  // post-connect sync can still enqueue runs; trigger manually or upgrade
+  // later and restore: "schedules": ["0 * * * *"]
   "workflows": [
     {
       "name": "numra-ledger-sync",
       "binding": "LEDGER_SYNC_WORKFLOW",
       "class_name": "LedgerSyncWorkflow",
-      "schedules": ["0 * * * *"],
     },
   ],
+  // Production defaults for `wrangler deploy`. Local `wrangler dev` overrides
+  // these via `.dev.vars` (gitignored).
   "vars": {
-    "BETTER_AUTH_URL": "http://localhost:8787",
-    "ENVIRONMENT": "development",
+    "BETTER_AUTH_URL": "https://numra-api.patryk-sztuczka00.workers.dev",
+    "ENVIRONMENT": "production",
     "SENTRY_DSN": "https://528f99e809b93c305c7c81a3f15dee4b@o4511763138936832.ingest.de.sentry.io/4511763145556048",
     "WEB_ORIGIN": "http://localhost:5173",
     "ENABLE_BANKING_API_BASE": "https://api.enablebanking.com",
-    "ENABLE_BANKING_REDIRECT_URL": "http://localhost:8787/connections/enable-banking/callback",
+    "ENABLE_BANKING_REDIRECT_URL": "https://numra-api.patryk-sztuczka00.workers.dev/connections/enable-banking/callback",
   },
 }
