@@ -9,6 +9,8 @@ import { maskIban } from "./normalize.ts";
 
 export const SUPPORTED_ASPSPS = [
   // Enable Banking identifies ASPSPs by exact `name` + `country` from GET /aspsps.
+  // Mock ASPSP is the sandbox path: configure accounts/transactions in Enable Banking Control Panel.
+  { name: "Mock ASPSP", country: "PL", label: "Mock ASPSP (sandbox)" },
   { name: "PKO Bank Polski", country: "PL", label: "PKO BP" },
   { name: "Revolut", country: "LT", label: "Revolut" },
 ] as const;
@@ -38,7 +40,7 @@ export async function startEnableBankingConnect(input: {
   if (!supported) {
     throw new ConnectError(
       "unsupported_aspsp",
-      "Only PKO Bank Polski (PL) and Revolut (LT) are supported in this version.",
+      "Only Mock ASPSP (PL), PKO Bank Polski (PL), and Revolut (LT) are supported in this version.",
     );
   }
 

@@ -400,4 +400,30 @@ describe("finance ledger", () => {
     const body = connectionsBodySchema.parse(await readJson(list));
     expect(body.connections[0]?.status).toBe("error");
   });
+
+  it("lists Mock ASPSP and starts sandbox connect with it", async () => {
+    const fake = createFakeEnableBankingClient();
+    setEnableBankingClientFactory(() => fake);
+
+    await allowEmail("operator@numra.test");
+    const signUpResponse = await signUp("operator@numra.test");
+    const cookie = cookieHeaderFromResponse(signUpResponse);
+
+    const aspspsResponse = await authedRequest("/connections/aspsps", cookie);
+    expect(aspspsResponse.status).toBe(200);
+    const aspspsBody = z
+      .object({
+        aspsps: z.array(z.object({ name: z.string(), country: z.string(), label: z.string() })),
+      })
+      .parse(await readJson(aspspsResponse));
+    expect(aspspsBody.aspsps.some((item) => item.name === "Mock ASPSP")).toBe(true);
+
+    const startResponse = await authedRequest("/connections/enable-banking/start", cookie, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ aspspName: "Mock ASPSP", aspspCountry: "PL" }),
+    });
+    expect(startResponse.status).toBe(200);
+    expect(fake.started[0]?.aspsp).toEqual({ name: "Mock ASPSP", country: "PL" });
+  });
 });

@@ -268,8 +268,9 @@ function AuthPanel(props: {
           <span className="text-[var(--blue)]">decision room.</span>
         </h1>
         <p className="mt-8 max-w-md text-lg leading-7 text-[var(--soft-ink)]">
-          Connect PKO BP and Revolut, sync a durable ledger, and browse accounts and transactions.
-          API: <span className="font-mono text-sm text-[var(--ink)]">{apiUrl}</span>
+          Connect a bank (Mock ASPSP in sandbox, PKO BP / Revolut in production), sync a durable
+          ledger, and browse accounts and transactions. API:{" "}
+          <span className="font-mono text-sm text-[var(--ink)]">{apiUrl}</span>
         </p>
       </div>
 
@@ -397,7 +398,7 @@ function ConnectionsPage() {
   const [aspsps, setAspsps] = useState<AspspOption[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [selected, setSelected] = useState<string>("PKO Bank Polski|PL");
+  const [selected, setSelected] = useState<string>("Mock ASPSP|PL");
   const flash = useMemo(() => new URLSearchParams(window.location.search), []);
 
   const load = useCallback(async () => {
@@ -450,7 +451,7 @@ function ConnectionsPage() {
       <PageHeader
         kicker="Ledger / institutions"
         title="Connections"
-        body="Link PKO BP or Revolut through Enable Banking. Numra stores the consent and runs ETL into the local ledger."
+        body="Link Mock ASPSP (sandbox), PKO BP, or Revolut through Enable Banking. Numra stores the consent and runs ETL into the local ledger."
       />
 
       {connectFlash ? (
@@ -480,6 +481,7 @@ function ConnectionsPage() {
             {(aspsps.length > 0
               ? aspsps
               : [
+                  { name: "Mock ASPSP", country: "PL", label: "Mock ASPSP (sandbox)" },
                   { name: "PKO Bank Polski", country: "PL", label: "PKO BP" },
                   { name: "Revolut", country: "LT", label: "Revolut" },
                 ]
@@ -505,7 +507,7 @@ function ConnectionsPage() {
       ) : items.length === 0 ? (
         <EmptyState
           title="No connections yet"
-          body="Connect PKO BP or Revolut to authorize account access. After consent, Numra stores accounts and pulls transactions into the ledger."
+          body="Connect Mock ASPSP (sandbox), PKO BP, or Revolut to authorize account access. After consent, Numra stores accounts and pulls transactions into the ledger."
         />
       ) : (
         <div className="overflow-x-auto border border-[var(--rule)] bg-white">

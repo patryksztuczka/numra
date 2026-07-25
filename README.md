@@ -87,7 +87,8 @@ apps/
 
 ## Finance notes
 
-- `POST /connections/enable-banking/start` begins ASPSP consent (PKO Bank Polski / Revolut).
+- `POST /connections/enable-banking/start` begins ASPSP consent (Mock ASPSP / PKO Bank Polski / Revolut).
+  Sandbox apps should use **Mock ASPSP** — configure accounts in the Enable Banking Control Panel → Mock ASPSP.
 - `GET /connections/enable-banking/callback` completes the session, stores
   accounts, and enqueues the ledger sync workflow (inline ETL fallback in tests).
 - `GET /connections`, `GET /accounts`, `GET /transactions` are session-scoped
