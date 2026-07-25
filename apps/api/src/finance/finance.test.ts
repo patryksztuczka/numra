@@ -144,7 +144,7 @@ describe("finance ledger", () => {
     const startResponse = await authedRequest("/connections/enable-banking/start", cookie, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ aspspName: "PKO BP", aspspCountry: "PL" }),
+      body: JSON.stringify({ aspspName: "PKO Bank Polski", aspspCountry: "PL" }),
     });
 
     expect(startResponse.status).toBe(200);
@@ -171,7 +171,7 @@ describe("finance ledger", () => {
     expect(connectionsBody.connections).toHaveLength(1);
     expect(connectionsBody.connections[0]).toMatchObject({
       status: "active",
-      aspspName: "PKO BP",
+      aspspName: "PKO Bank Polski",
     });
 
     const accountsResponse = await authedRequest("/accounts", cookie);
@@ -197,7 +197,7 @@ describe("finance ledger", () => {
     await authedRequest("/connections/enable-banking/start", cookie, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ aspspName: "PKO BP", aspspCountry: "PL" }),
+      body: JSON.stringify({ aspspName: "PKO Bank Polski", aspspCountry: "PL" }),
     });
 
     const state = fake.started[0]!.state;
@@ -277,7 +277,7 @@ describe("finance ledger", () => {
     await authedRequest("/connections/enable-banking/start", cookie, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ aspspName: "PKO BP", aspspCountry: "PL" }),
+      body: JSON.stringify({ aspspName: "PKO Bank Polski", aspspCountry: "PL" }),
     });
     const state = fake.started[0]!.state;
     await app.request(
@@ -305,7 +305,7 @@ describe("finance ledger", () => {
     await authedRequest("/connections/enable-banking/start", aliceCookie, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ aspspName: "PKO BP", aspspCountry: "PL" }),
+      body: JSON.stringify({ aspspName: "PKO Bank Polski", aspspCountry: "PL" }),
     });
     const state = fake.started[0]!.state;
     await app.request(
@@ -345,7 +345,7 @@ describe("finance ledger", () => {
     await authedRequest("/connections/enable-banking/start", cookie, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ aspspName: "PKO BP", aspspCountry: "PL" }),
+      body: JSON.stringify({ aspspName: "PKO Bank Polski", aspspCountry: "PL" }),
     });
     const state = fake.started[0]!.state;
     await app.request(
@@ -379,7 +379,7 @@ describe("finance ledger", () => {
     await authedRequest("/connections/enable-banking/start", cookie, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ aspspName: "PKO BP", aspspCountry: "PL" }),
+      body: JSON.stringify({ aspspName: "PKO Bank Polski", aspspCountry: "PL" }),
     });
     const state = fake.started[0]!.state;
 

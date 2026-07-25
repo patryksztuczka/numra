@@ -57,7 +57,7 @@ export function createFakeEnableBankingClient(
             account_id: { iban: "LT121000011101001000" },
           },
         ],
-        aspsp: { name: "PKO BP", country: "PL" },
+        aspsp: { name: "PKO Bank Polski", country: "PL" },
         psu_type: "personal",
         access: {
           valid_until: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),

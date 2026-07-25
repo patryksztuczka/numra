@@ -87,7 +87,7 @@ apps/
 
 ## Finance notes
 
-- `POST /connections/enable-banking/start` begins ASPSP consent (PKO BP / Revolut).
+- `POST /connections/enable-banking/start` begins ASPSP consent (PKO Bank Polski / Revolut).
 - `GET /connections/enable-banking/callback` completes the session, stores
   accounts, and enqueues the ledger sync workflow (inline ETL fallback in tests).
 - `GET /connections`, `GET /accounts`, `GET /transactions` are session-scoped

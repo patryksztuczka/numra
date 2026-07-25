@@ -397,7 +397,7 @@ function ConnectionsPage() {
   const [aspsps, setAspsps] = useState<AspspOption[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [selected, setSelected] = useState<string>("PKO BP|PL");
+  const [selected, setSelected] = useState<string>("PKO Bank Polski|PL");
   const flash = useMemo(() => new URLSearchParams(window.location.search), []);
 
   const load = useCallback(async () => {
@@ -480,7 +480,7 @@ function ConnectionsPage() {
             {(aspsps.length > 0
               ? aspsps
               : [
-                  { name: "PKO BP", country: "PL", label: "PKO BP" },
+                  { name: "PKO Bank Polski", country: "PL", label: "PKO BP" },
                   { name: "Revolut", country: "LT", label: "Revolut" },
                 ]
             ).map((item) => (
