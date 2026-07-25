@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 
 import { NavBar } from "./components/navbar.tsx";
+import { OverviewPage } from "./components/overview-page.tsx";
 import {
   fetchAccounts,
   fetchAspsps,
@@ -18,7 +19,7 @@ import {
 import { authClient } from "./lib/auth-client.ts";
 
 type Mode = "sign-in" | "sign-up";
-type Page = "accounts" | "transactions" | "connections";
+type Page = "overview" | "accounts" | "transactions" | "connections";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
 
@@ -29,7 +30,10 @@ function pathToPage(pathname: string): Page {
   if (pathname.startsWith("/connections")) {
     return "connections";
   }
-  return "accounts";
+  if (pathname.startsWith("/accounts")) {
+    return "accounts";
+  }
+  return "overview";
 }
 
 function pageToPath(page: Page): string {
@@ -38,8 +42,10 @@ function pageToPath(page: Page): string {
       return "/transactions";
     case "connections":
       return "/connections";
-    default:
+    case "accounts":
       return "/accounts";
+    default:
+      return "/";
   }
 }
 
@@ -81,7 +87,7 @@ export function App() {
         if (result.error) {
           setError(result.error.message ?? "Sign up failed.");
         } else {
-          navigate("accounts");
+          navigate("overview");
         }
       } else {
         const result = await authClient.signIn.email({
@@ -92,7 +98,7 @@ export function App() {
         if (result.error) {
           setError(result.error.message ?? "Sign in failed.");
         } else {
-          navigate("accounts");
+          navigate("overview");
         }
       }
     } catch (caught) {
@@ -109,7 +115,7 @@ export function App() {
     try {
       await authClient.signOut();
       window.history.replaceState({}, "", "/");
-      setPage("accounts");
+      setPage("overview");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Sign out failed.");
     } finally {
@@ -159,17 +165,24 @@ export function App() {
         />
 
         <section className="mx-auto w-full max-w-[1440px] px-6 pt-10 pb-16 sm:px-10 lg:px-16">
+          {page === "overview" ? <OverviewPage /> : null}
           {page === "accounts" ? <AccountsPage /> : null}
           {page === "transactions" ? <TransactionsPage /> : null}
           {page === "connections" ? <ConnectionsPage /> : null}
         </section>
 
-        <footer className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 border-t border-[var(--rule)] px-6 py-6 font-mono text-[10px] tracking-[0.13em] text-[var(--muted)] uppercase sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-16">
-          <p>Numra / ledger</p>
-          <p>Enable Banking · D1 · Workflows</p>
-        </footer>
+        <AppFooter />
       </div>
     </main>
+  );
+}
+
+function AppFooter() {
+  return (
+    <footer className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 border-t border-[var(--rule)] px-6 py-6 font-mono text-[10px] tracking-[0.13em] text-[var(--muted)] uppercase sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-16">
+      <p>© {new Date().getFullYear()} Numra</p>
+      <p>0.0.1-alpha</p>
+    </footer>
   );
 }
 
@@ -189,10 +202,7 @@ function Shell(props: { children: ReactNode }) {
           {props.children}
         </section>
 
-        <footer className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 border-t border-[var(--rule)] px-6 py-6 font-mono text-[10px] tracking-[0.13em] text-[var(--muted)] uppercase sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-16">
-          <p>Numra / ledger</p>
-          <p>Enable Banking · D1 · Workflows</p>
-        </footer>
+        <AppFooter />
       </div>
     </main>
   );

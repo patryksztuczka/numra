@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 
-export type NavPage = "accounts" | "transactions" | "connections";
+export type NavPage = "overview" | "accounts" | "transactions" | "connections";
 
 export type NavUser = {
   name: string;
@@ -16,6 +16,7 @@ export type NavBarProps = {
 };
 
 const NAV_ITEMS: { id: NavPage; label: string }[] = [
+  { id: "overview", label: "Overview" },
   { id: "accounts", label: "Accounts" },
   { id: "transactions", label: "Transactions" },
   { id: "connections", label: "Connections" },
