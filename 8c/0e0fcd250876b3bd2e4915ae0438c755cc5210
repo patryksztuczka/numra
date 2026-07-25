@@ -1,0 +1,22 @@
+apps/api/wrangler.jsonc
+  s_f927f5fd9069e4::t_c5ac19369388ca 7-8,30-31,33-34,38
+  s_f927f5fd9069e4::t_b76c76bc53eb41 20-22
+README.md
+  s_f927f5fd9069e4::t_fc2177cf43a5af 95-97,109-111,113-133,137-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "8c0e0fcd250876b3bd2e4915ae0438c755cc5210",
+  "prompts": {},
+  "sessions": {
+    "s_f927f5fd9069e4": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9a1a-6910-72be-b9cc-4dbe1c82bd20",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
