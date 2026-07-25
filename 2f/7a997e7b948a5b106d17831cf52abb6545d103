@@ -1,0 +1,27 @@
+apps/web/src/components/navbar.tsx
+  s_ef999ad812bcac::t_a446ad981c7350 3,19
+apps/web/src/App.tsx
+  s_ef999ad812bcac::t_623657817c6bed 174,180-188,205
+  s_ef999ad812bcac::t_9e6d1e017d1041 33-35,45,47-48
+  s_ef999ad812bcac::t_51c4e35e505420 4,22,36,90,101,118,168
+apps/web/src/components/overview-page.tsx
+  s_ef999ad812bcac::t_9590f2d345550f 212-462
+  s_ef999ad812bcac::t_3e5e6f0282e9b9 169
+  s_ef999ad812bcac::t_d799684208869e 1-168,170-211,463-526
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2f7a997e7b948a5b106d17831cf52abb6545d103",
+  "prompts": {},
+  "sessions": {
+    "s_ef999ad812bcac": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9aab-b6a1-7490-9217-2e71801c5d80",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
