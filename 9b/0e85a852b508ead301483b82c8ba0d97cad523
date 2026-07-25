@@ -1,0 +1,21 @@
+.gitignore
+  s_81a7eeb60c6509::t_82877e47bd151f 13
+.oxfmtrc.json
+  s_81a7eeb60c6509::t_75316cddc16893 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "9b0e85a852b508ead301483b82c8ba0d97cad523",
+  "prompts": {},
+  "sessions": {
+    "s_81a7eeb60c6509": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9a08-76d3-7cef-9622-616f07e411f9",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
