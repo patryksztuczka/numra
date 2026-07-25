@@ -59,6 +59,59 @@ a {
   outline-offset: 4px;
 }
 
+.nav-pill {
+  top: 0;
+  left: 0;
+  will-change: transform, width, height;
+}
+
+.nav-pill-ready {
+  transition:
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes account-menu-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes account-menu-item-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.account-menu {
+  animation: account-menu-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.account-menu-item {
+  animation: account-menu-item-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.account-menu-item:nth-child(1) {
+  animation-delay: 40ms;
+}
+
+.account-menu-item:nth-child(2) {
+  animation-delay: 75ms;
+}
+
 .status-rail {
   box-shadow: 12px 12px 0 rgb(21 87 255 / 0.14);
 }
@@ -100,6 +153,8 @@ a {
   *::before,
   *::after {
     scroll-behavior: auto;
-    transition-duration: 0.01ms;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

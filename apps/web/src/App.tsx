@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 
+import { NavBar } from "./components/navbar.tsx";
 import {
   fetchAccounts,
   fetchAspsps,
@@ -17,28 +18,28 @@ import {
 import { authClient } from "./lib/auth-client.ts";
 
 type Mode = "sign-in" | "sign-up";
-type Page = "connections" | "accounts" | "transactions";
+type Page = "accounts" | "transactions" | "connections";
 
 const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
 
 function pathToPage(pathname: string): Page {
-  if (pathname.startsWith("/accounts")) {
-    return "accounts";
-  }
   if (pathname.startsWith("/transactions")) {
     return "transactions";
   }
-  return "connections";
+  if (pathname.startsWith("/connections")) {
+    return "connections";
+  }
+  return "accounts";
 }
 
 function pageToPath(page: Page): string {
   switch (page) {
-    case "accounts":
-      return "/accounts";
     case "transactions":
       return "/transactions";
-    default:
+    case "connections":
       return "/connections";
+    default:
+      return "/accounts";
   }
 }
 
@@ -80,7 +81,7 @@ export function App() {
         if (result.error) {
           setError(result.error.message ?? "Sign up failed.");
         } else {
-          navigate("connections");
+          navigate("accounts");
         }
       } else {
         const result = await authClient.signIn.email({
@@ -91,7 +92,7 @@ export function App() {
         if (result.error) {
           setError(result.error.message ?? "Sign in failed.");
         } else {
-          navigate("connections");
+          navigate("accounts");
         }
       }
     } catch (caught) {
@@ -108,7 +109,7 @@ export function App() {
     try {
       await authClient.signOut();
       window.history.replaceState({}, "", "/");
-      setPage("connections");
+      setPage("accounts");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Sign out failed.");
     } finally {
@@ -147,90 +148,44 @@ export function App() {
   }
 
   return (
-    <Shell
-      sessionLabel={`${session.user.name} · ${session.user.email}`}
-      onSignOut={onSignOut}
-      busy={busy}
-      nav={
-        <nav className="flex flex-wrap gap-2 font-mono text-[10px] tracking-[0.16em] uppercase">
-          {(
-            [
-              ["connections", "Connections"],
-              ["accounts", "Accounts"],
-              ["transactions", "Transactions"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => navigate(id)}
-              className={`focus-ring px-3 py-2 ${
-                page === id
-                  ? "bg-[var(--ink)] text-white"
-                  : "border border-[var(--rule)] bg-white/70"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-      }
-    >
-      {page === "connections" ? <ConnectionsPage /> : null}
-      {page === "accounts" ? <AccountsPage /> : null}
-      {page === "transactions" ? <TransactionsPage /> : null}
-    </Shell>
+    <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
+      <div className="page-grid min-h-screen">
+        <NavBar
+          page={page}
+          user={{ name: session.user.name, email: session.user.email }}
+          busy={busy}
+          onNavigate={navigate}
+          onSignOut={() => void onSignOut()}
+        />
+
+        <section className="mx-auto w-full max-w-[1440px] px-6 pt-10 pb-16 sm:px-10 lg:px-16">
+          {page === "accounts" ? <AccountsPage /> : null}
+          {page === "transactions" ? <TransactionsPage /> : null}
+          {page === "connections" ? <ConnectionsPage /> : null}
+        </section>
+
+        <footer className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 border-t border-[var(--rule)] px-6 py-6 font-mono text-[10px] tracking-[0.13em] text-[var(--muted)] uppercase sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-16">
+          <p>Numra / ledger</p>
+          <p>Enable Banking · D1 · Workflows</p>
+        </footer>
+      </div>
+    </main>
   );
 }
 
-function Shell(props: {
-  children: ReactNode;
-  sessionLabel?: string;
-  onSignOut?: () => void;
-  busy?: boolean;
-  nav?: ReactNode;
-}) {
+function Shell(props: { children: ReactNode }) {
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
       <div className="page-grid min-h-screen">
-        <header className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-6 py-6 sm:px-10 lg:px-16">
-          <div className="flex items-center justify-between gap-4">
-            <a className="wordmark focus-ring" href="/" aria-label="Numra home">
-              NUM<span>/</span>RA
+        <header className="bg-[var(--ink)] text-white">
+          <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
+            <a className="wordmark focus-ring text-white" href="/" aria-label="Numra home">
+              NUM<span className="text-[var(--sky)]">/</span>RA
             </a>
-            <div className="flex items-center gap-3 font-mono text-[11px] tracking-[0.16em] uppercase">
-              <span
-                className={`h-2 w-2 rounded-full ${props.sessionLabel ? "bg-[var(--signal)]" : "bg-[var(--muted)]"}`}
-              />
-              {props.sessionLabel ? "Signed in" : "Signed out"}
-            </div>
           </div>
-          {props.sessionLabel ? (
-            <div className="flex flex-col gap-3 border border-[var(--rule)] bg-[var(--panel)]/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="truncate font-mono text-[10px] tracking-[0.16em] text-[var(--muted)] uppercase">
-                  Operator
-                </p>
-                <p className="truncate text-sm text-[var(--soft-ink)]">{props.sessionLabel}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {props.nav}
-                {props.onSignOut ? (
-                  <button
-                    type="button"
-                    onClick={props.onSignOut}
-                    disabled={props.busy}
-                    className="focus-ring border border-[var(--rule)] px-3 py-2 font-mono text-[10px] tracking-[0.14em] uppercase disabled:opacity-60"
-                  >
-                    Sign out
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
         </header>
 
-        <section className="mx-auto w-full max-w-[1440px] px-6 pb-16 sm:px-10 lg:px-16">
+        <section className="mx-auto w-full max-w-[1440px] px-6 pt-10 pb-16 sm:px-10 lg:px-16">
           {props.children}
         </section>
 
