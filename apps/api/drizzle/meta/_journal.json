@@ -8,6 +8,13 @@
       "when": 1784481695060,
       "tag": "0000_youthful_prodigy",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784542607625,
+      "tag": "0001_secret_yellow_claw",
+      "breakpoints": true
     }
   ]
 }

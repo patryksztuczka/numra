@@ -7,6 +7,11 @@ Identity uses [Better Auth](https://www.better-auth.com/) with email/password,
 Cloudflare D1, and Drizzle. Sign-up and sign-in are limited to emails stored in
 the `allowed_emails` table.
 
+Bank connectivity goes through [Enable Banking](https://enablebanking.com/).
+Numra stores connections, accounts, and transactions in D1 (the local ledger)
+and refreshes them hourly via a Cloudflare Workflow ETL. The web UI reads only
+from Numra — never live from the bank on page load.
+
 ## Requirements
 
 - Node.js 26.4.0
@@ -27,7 +32,18 @@ pnpm dev
 ```
 
 Edit `apps/api/.dev.vars` and set a long random `BETTER_AUTH_SECRET` before
-relying on auth outside local smoke tests.
+relying on auth outside local smoke tests. For bank connect, also set:
+
+- `ENABLE_BANKING_APPLICATION_ID` / `ENABLE_BANKING_PRIVATE_KEY` (RS256 PEM)
+- `ENABLE_BANKING_API_BASE` (default `https://api.enablebanking.com`)
+- `ENABLE_BANKING_REDIRECT_URL` (API callback; local default is
+  `http://localhost:8787/connections/enable-banking/callback`)
+- `ENCRYPTION_KEY` — 32-byte key, base64 (`openssl rand -base64 32`), used to
+  encrypt Enable Banking session ids at rest
+
+Register that redirect URL on your Enable Banking application. Sandbox apps
+activate automatically; production personal use typically needs account
+whitelisting.
 
 The web app runs at `http://localhost:5173` and the Worker API at
 `http://localhost:8787`.
@@ -65,9 +81,19 @@ The local seed allowlists `dev@numra.local` so you can sign up immediately.
 
 ```text
 apps/
-├── api/  Hono application deployed with Wrangler (Better Auth + D1)
+├── api/  Hono Worker (auth, Enable Banking gateway, ledger ETL workflow, D1)
 └── web/  Vite + React + Tailwind CSS application
 ```
+
+## Finance notes
+
+- `POST /connections/enable-banking/start` begins ASPSP consent (PKO BP / Revolut).
+- `GET /connections/enable-banking/callback` completes the session, stores
+  accounts, and enqueues the ledger sync workflow (inline ETL fallback in tests).
+- `GET /connections`, `GET /accounts`, `GET /transactions` are session-scoped
+  read models over D1.
+- Hourly schedule: Workflow binding `LEDGER_SYNC_WORKFLOW` (`0 * * * *`).
+- Money is stored as integer minor units + currency code.
 
 ## Auth notes
 
@@ -78,7 +104,8 @@ apps/
 - Removing an email from the allowlist blocks future sign-in and rejects `/me`
   for existing sessions (and signs them out).
 - Configure production secrets with Wrangler (`BETTER_AUTH_SECRET`,
-  `BETTER_AUTH_URL`, `WEB_ORIGIN`) and point the D1 binding at a real database.
+  `BETTER_AUTH_URL`, `WEB_ORIGIN`, Enable Banking credentials, `ENCRYPTION_KEY`)
+  and point the D1 binding at a real database.
 
 Deploy the API after authenticating Wrangler:
 

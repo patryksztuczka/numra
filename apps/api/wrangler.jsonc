@@ -11,8 +11,16 @@
     {
       "binding": "DB",
       "database_name": "numra",
-      "database_id": "600e172051b0ad2e4ed216b77b4607d0",
+      "database_id": "665a7fa0-943b-4e3e-b148-d95ea6496603",
       "migrations_dir": "drizzle",
+    },
+  ],
+  "workflows": [
+    {
+      "name": "numra-ledger-sync",
+      "binding": "LEDGER_SYNC_WORKFLOW",
+      "class_name": "LedgerSyncWorkflow",
+      "schedules": ["0 * * * *"],
     },
   ],
   "vars": {
@@ -20,5 +28,7 @@
     "ENVIRONMENT": "development",
     "SENTRY_DSN": "https://528f99e809b93c305c7c81a3f15dee4b@o4511763138936832.ingest.de.sentry.io/4511763145556048",
     "WEB_ORIGIN": "http://localhost:5173",
+    "ENABLE_BANKING_API_BASE": "https://api.enablebanking.com",
+    "ENABLE_BANKING_REDIRECT_URL": "http://localhost:8787/connections/enable-banking/callback",
   },
 }

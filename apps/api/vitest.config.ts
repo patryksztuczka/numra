@@ -20,6 +20,12 @@ export default defineConfig(async () => {
             BETTER_AUTH_SECRET: "test-secret-with-at-least-32-characters!",
             BETTER_AUTH_URL: "http://localhost:8787",
             WEB_ORIGIN: "http://localhost:5173",
+            ENABLE_BANKING_APPLICATION_ID: "test-app-id",
+            ENABLE_BANKING_PRIVATE_KEY: "test-private-key",
+            ENABLE_BANKING_API_BASE: "https://api.enablebanking.com",
+            ENABLE_BANKING_REDIRECT_URL:
+              "http://localhost:8787/connections/enable-banking/callback",
+            ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
             TEST_MIGRATIONS: migrations,
           },
         },

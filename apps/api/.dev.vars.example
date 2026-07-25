@@ -1,3 +1,10 @@
 BETTER_AUTH_SECRET=replace-with-a-long-random-secret
 BETTER_AUTH_URL=http://localhost:8787
 WEB_ORIGIN=http://localhost:5173
+ENABLE_BANKING_APPLICATION_ID=your-enable-banking-app-id
+# PEM private key; use \n for newlines if stored on one line
+ENABLE_BANKING_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+ENABLE_BANKING_API_BASE=https://api.enablebanking.com
+ENABLE_BANKING_REDIRECT_URL=http://localhost:8787/connections/enable-banking/callback
+# 32-byte key, base64-encoded (openssl rand -base64 32)
+ENCRYPTION_KEY=replace-with-base64-32-byte-key

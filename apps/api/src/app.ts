@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import type { AppEnv } from "./access/session.ts";
 import { requireSession } from "./access/session.ts";
 import { createAuth } from "./auth/index.ts";
+import { financeRoutes, handleEnableBankingCallback } from "./finance/routes.ts";
 
 export const app = new Hono<AppEnv>();
 
@@ -42,6 +43,9 @@ app.get("/health", (context) =>
   }),
 );
 
+// Enable Banking OAuth callback — public; ownership bound via auth state.
+app.get("/connections/enable-banking/callback", (context) => handleEnableBankingCallback(context));
+
 // Default: session required for all routes registered below
 app.use("*", requireSession);
 
@@ -58,6 +62,8 @@ app.get("/me", (context) => {
     },
   });
 });
+
+app.route("/", financeRoutes);
 
 app.notFound((context) =>
   context.json(

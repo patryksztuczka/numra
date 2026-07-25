@@ -6,5 +6,11 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
+    // Client-side routes: /connections, /accounts, /transactions
+    // Vite already falls back to index.html for unknown paths in dev.
   },
+  preview: {
+    port: 5173,
+  },
+  appType: "spa",
 });

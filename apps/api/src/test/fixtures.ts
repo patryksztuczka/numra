@@ -3,23 +3,45 @@ import { eq } from "drizzle-orm";
 
 import { normalizeEmail } from "../access/allowlist.ts";
 import { createDb } from "../db/index.ts";
-import { accounts, allowedEmails, sessions, users, verifications } from "../db/schema.ts";
+import {
+  accounts,
+  allowedEmails,
+  bankAccounts,
+  connections,
+  sessions,
+  transactions,
+  users,
+  verifications,
+} from "../db/schema.ts";
 import type { Env } from "../env.ts";
 
-export function testEnv(): Env {
+/** Deterministic 32-byte key (base64) used only in tests. */
+export const TEST_ENCRYPTION_KEY = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
+export function testEnv(overrides: Partial<Env> = {}): Env {
   return {
     DB: env.DB,
+    LEDGER_SYNC_WORKFLOW: env.LEDGER_SYNC_WORKFLOW,
     BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: env.BETTER_AUTH_URL,
     ENVIRONMENT: "test",
     SENTRY_DSN: "",
     WEB_ORIGIN: env.WEB_ORIGIN,
+    ENABLE_BANKING_APPLICATION_ID: "test-app-id",
+    ENABLE_BANKING_PRIVATE_KEY: "test-private-key",
+    ENABLE_BANKING_API_BASE: "https://api.enablebanking.com",
+    ENABLE_BANKING_REDIRECT_URL: "http://localhost:8787/connections/enable-banking/callback",
+    ENCRYPTION_KEY: TEST_ENCRYPTION_KEY,
+    ...overrides,
   };
 }
 
 export async function resetAuthState() {
   const db = createDb(testEnv());
 
+  await db.delete(transactions);
+  await db.delete(bankAccounts);
+  await db.delete(connections);
   await db.delete(sessions);
   await db.delete(accounts);
   await db.delete(verifications);
