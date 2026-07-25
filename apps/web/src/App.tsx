@@ -393,12 +393,38 @@ function StatusPill(props: { status: string }) {
   );
 }
 
+const FALLBACK_ASPSPS: AspspOption[] = [
+  { name: "Mock ASPSP", country: "PL", label: "Mock ASPSP (sandbox)" },
+  { name: "PKO Bank Polski", country: "PL", label: "PKO BP" },
+  { name: "Revolut", country: "LT", label: "Revolut" },
+];
+
+/** Pick the most relevant stored connection for an ASPSP (active first, then newest). */
+function pickConnectionForAspsp(connections: Connection[], aspsp: AspspOption): Connection | null {
+  const matches = connections.filter(
+    (item) =>
+      item.aspspName.toLowerCase() === aspsp.name.toLowerCase() &&
+      item.aspspCountry.toLowerCase() === aspsp.country.toLowerCase() &&
+      item.status !== "pending",
+  );
+
+  if (matches.length === 0) {
+    return null;
+  }
+
+  const active = matches.find((item) => item.status === "active");
+  if (active) {
+    return active;
+  }
+
+  return matches.toSorted((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null;
+}
+
 function ConnectionsPage() {
   const [items, setItems] = useState<Connection[] | null>(null);
-  const [aspsps, setAspsps] = useState<AspspOption[]>([]);
+  const [aspsps, setAspsps] = useState<AspspOption[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [selected, setSelected] = useState<string>("Mock ASPSP|PL");
+  const [busyKey, setBusyKey] = useState<string | null>(null);
   const flash = useMemo(() => new URLSearchParams(window.location.search), []);
 
   const load = useCallback(async () => {
@@ -409,10 +435,7 @@ function ConnectionsPage() {
         fetchAspsps(),
       ]);
       setItems(connectionsResult.connections);
-      setAspsps(aspspsResult.aspsps);
-      if (aspspsResult.aspsps[0]) {
-        setSelected(`${aspspsResult.aspsps[0].name}|${aspspsResult.aspsps[0].country}`);
-      }
+      setAspsps(aspspsResult.aspsps.length > 0 ? aspspsResult.aspsps : FALLBACK_ASPSPS);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Failed to load connections.");
     }
@@ -422,20 +445,16 @@ function ConnectionsPage() {
     void load();
   }, [load]);
 
-  const onConnect = async () => {
-    const [name, country] = selected.split("|");
-    if (!name || !country) {
-      return;
-    }
-
-    setBusy(true);
+  const onConnect = async (aspsp: AspspOption) => {
+    const key = `${aspsp.name}|${aspsp.country}`;
+    setBusyKey(key);
     setError(null);
     try {
-      const result = await startBankConnect(name, country);
+      const result = await startBankConnect(aspsp.name, aspsp.country);
       window.location.assign(result.redirectUrl);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Failed to start bank connect.");
-      setBusy(false);
+      setBusyKey(null);
     }
   };
 
@@ -445,6 +464,12 @@ function ConnectionsPage() {
       : flash.get("connect") === "error"
         ? (flash.get("message") ?? "Bank connection failed.")
         : null;
+
+  const catalog = aspsps ?? FALLBACK_ASPSPS;
+  const rows = catalog.map((aspsp) => ({
+    aspsp,
+    connection: items ? pickConnectionForAspsp(items, aspsp) : null,
+  }));
 
   return (
     <div className="space-y-8">
@@ -468,47 +493,8 @@ function ConnectionsPage() {
 
       {error ? <ErrorBanner message={error} /> : null}
 
-      <div className="flex flex-col gap-3 border border-[var(--ink)] bg-[var(--panel)] p-5 sm:flex-row sm:items-end">
-        <label className="flex flex-1 flex-col gap-2 text-sm">
-          <span className="font-mono text-[10px] tracking-[0.16em] text-[var(--muted)] uppercase">
-            Institution
-          </span>
-          <select
-            className="focus-ring border border-[var(--rule)] bg-white px-3 py-3"
-            value={selected}
-            onChange={(event) => setSelected(event.target.value)}
-          >
-            {(aspsps.length > 0
-              ? aspsps
-              : [
-                  { name: "Mock ASPSP", country: "PL", label: "Mock ASPSP (sandbox)" },
-                  { name: "PKO Bank Polski", country: "PL", label: "PKO BP" },
-                  { name: "Revolut", country: "LT", label: "Revolut" },
-                ]
-            ).map((item) => (
-              <option key={`${item.name}-${item.country}`} value={`${item.name}|${item.country}`}>
-                {item.label} ({item.country})
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={onConnect}
-          className="focus-ring bg-[var(--ink)] px-5 py-3 font-mono text-xs tracking-[0.12em] text-white uppercase disabled:opacity-60"
-        >
-          {busy ? "Redirecting…" : "Connect bank"}
-        </button>
-      </div>
-
-      {items === null ? (
+      {items === null || aspsps === null ? (
         <p className="font-mono text-sm text-[var(--muted)]">Loading connections…</p>
-      ) : items.length === 0 ? (
-        <EmptyState
-          title="No connections yet"
-          body="Connect Mock ASPSP (sandbox), PKO BP, or Revolut to authorize account access. After consent, Numra stores accounts and pulls transactions into the ledger."
-        />
       ) : (
         <div className="overflow-x-auto border border-[var(--rule)] bg-white">
           <table className="min-w-full text-left text-sm">
@@ -519,29 +505,52 @@ function ConnectionsPage() {
                 <th className="px-4 py-3">Valid until</th>
                 <th className="px-4 py-3">Last synced</th>
                 <th className="px-4 py-3">Error</th>
+                <th className="px-4 py-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-[var(--rule)] last:border-0">
-                  <td className="px-4 py-3 font-medium">
-                    {item.aspspName}{" "}
-                    <span className="font-mono text-xs text-[var(--muted)]">
-                      {item.aspspCountry}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusPill status={item.status} />
-                  </td>
-                  <td className="px-4 py-3 text-[var(--soft-ink)]">
-                    {formatDateTime(item.validUntil)}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--soft-ink)]">
-                    {formatDateTime(item.lastSyncedAt)}
-                  </td>
-                  <td className="px-4 py-3 text-red-800">{item.lastError ?? "—"}</td>
-                </tr>
-              ))}
+              {rows.map(({ aspsp, connection }) => {
+                const key = `${aspsp.name}|${aspsp.country}`;
+                const isActive = connection?.status === "active";
+                const isBusy = busyKey === key;
+
+                return (
+                  <tr key={key} className="border-b border-[var(--rule)] last:border-0">
+                    <td className="px-4 py-3 font-medium">
+                      {aspsp.label}{" "}
+                      <span className="font-mono text-xs text-[var(--muted)]">{aspsp.country}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {connection ? (
+                        <StatusPill status={connection.status} />
+                      ) : (
+                        <span className="font-mono text-[10px] tracking-[0.14em] text-[var(--muted)] uppercase">
+                          Not connected
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-[var(--soft-ink)]">
+                      {formatDateTime(connection?.validUntil ?? null)}
+                    </td>
+                    <td className="px-4 py-3 text-[var(--soft-ink)]">
+                      {formatDateTime(connection?.lastSyncedAt ?? null)}
+                    </td>
+                    <td className="px-4 py-3 text-red-800">{connection?.lastError ?? "—"}</td>
+                    <td className="px-4 py-3 text-right">
+                      {isActive ? null : (
+                        <button
+                          type="button"
+                          disabled={busyKey !== null}
+                          onClick={() => void onConnect(aspsp)}
+                          className="focus-ring bg-[var(--ink)] px-4 py-2 font-mono text-[10px] tracking-[0.12em] text-white uppercase disabled:opacity-60"
+                        >
+                          {isBusy ? "Redirecting…" : connection ? "Reconnect" : "Connect"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

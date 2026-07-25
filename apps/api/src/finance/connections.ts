@@ -48,6 +48,18 @@ export async function startEnableBankingConnect(input: {
   const authState = crypto.randomUUID();
   const now = new Date();
 
+  // Drop abandoned OAuth attempts for this ASPSP so the UI doesn't pile up pendings.
+  await input.db
+    .delete(connections)
+    .where(
+      and(
+        eq(connections.userId, input.userId),
+        eq(connections.aspspName, supported.name),
+        eq(connections.aspspCountry, supported.country),
+        eq(connections.status, "pending"),
+      ),
+    );
+
   await input.db.insert(connections).values({
     id: connectionId,
     userId: input.userId,
