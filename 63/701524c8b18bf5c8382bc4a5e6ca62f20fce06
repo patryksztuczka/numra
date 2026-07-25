@@ -1,0 +1,27 @@
+apps/web/src/App.tsx
+  s_81a7eeb60c6509::t_a3f171573165c3 400,483
+README.md
+  s_81a7eeb60c6509::t_778764fdd1a727 90
+apps/api/src/test/fake-enable-banking.ts
+  s_81a7eeb60c6509::t_d59712d3a74529 60
+apps/api/src/finance/finance.test.ts
+  s_81a7eeb60c6509::t_04a67d9eda339b 147,174,200,280,308,348,382
+apps/api/src/finance/connections.ts
+  s_81a7eeb60c6509::t_ec6e010c86173e 11-12,41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "63701524c8b18bf5c8382bc4a5e6ca62f20fce06",
+  "prompts": {},
+  "sessions": {
+    "s_81a7eeb60c6509": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9a08-76d3-7cef-9622-616f07e411f9",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
