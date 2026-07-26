@@ -1,0 +1,40 @@
+apps/web/vite.config.ts
+  s_d91434c10f2407::t_ab14c41e962301 9-10
+apps/web/index.html
+  s_d91434c10f2407::t_459f8d2a8ec82f 9,11
+apps/web/src/App.tsx
+  s_d91434c10f2407::t_0637e8815d005f 211-217
+  s_d91434c10f2407::t_a02703f0e424f5 199,201,204-205,246
+  s_d91434c10f2407::t_70fd3020b00ab5 61,102
+  s_d91434c10f2407::t_7cec8e138c4d56 1-2,4-6,24,26-27,29-36,38-60,62-77,80-101,103-116,119-120,144,155,166-179,352,385,387,389-390,410
+apps/web/src/components/navbar.tsx
+  s_d91434c10f2407::t_9973d349bfbe4a 2,27-31,39-51,247,249,255-257,272-278
+  s_d91434c10f2407::t_b5ecefbbdd7c07 5,12-13,19-26,34-36,152-157,159,165,195-246,248,250-254,263,269-271,279-280,317-344
+  s_d91434c10f2407::t_bbeb74e8e734d9 37-38
+apps/web/src/components/legal-page.tsx
+  s_d91434c10f2407::t_00c0a6e9703291 1-132
+apps/web/src/main.tsx
+  s_d91434c10f2407::t_e40a259df96679 3,19-21
+apps/web/package.json
+  s_d91434c10f2407::t_c7bffedc1f1fb8 18
+apps/web/src/components/app-shell.tsx
+  s_d91434c10f2407::t_ea138af71ba400 1-43
+pnpm-lock.yaml
+  s_d91434c10f2407::t_5e56c7115e2d4c 108-110,1858-1860,2274-2283,3696-3697,4051-4057
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "19d79c30fa402f5c212028690297a0108344fcfc",
+  "prompts": {},
+  "sessions": {
+    "s_d91434c10f2407": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9acf-1f38-7c7b-bef9-158c6dcb2a0a",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
