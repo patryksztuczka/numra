@@ -1,0 +1,21 @@
+README.md
+  s_6fccc41c7b80a3::t_c4818a26b7920a 148
+apps/api/wrangler.jsonc
+  s_6fccc41c7b80a3::t_32a9dc0ea6defb 38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "f1aab114a8abe47cea138e519a9f244762c14ea7",
+  "prompts": {},
+  "sessions": {
+    "s_6fccc41c7b80a3": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9dd9-1c50-71e9-b4c3-87203ab28027",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
