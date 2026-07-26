@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router";
 
 import { App } from "./App.tsx";
 import { Sentry } from "./sentry.ts";
@@ -15,7 +16,9 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <Sentry.ErrorBoundary fallback={<p>Something went wrong.</p>}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </Sentry.ErrorBoundary>
   </StrictMode>,
 );

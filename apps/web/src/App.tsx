@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Navigate, Outlet, Route, Routes, useNavigate, useSearchParams } from "react-router";
 
-import { NavBar } from "./components/navbar.tsx";
+import { AppFooter, AppShell } from "./components/app-shell.tsx";
+import { LegalPage } from "./components/legal-page.tsx";
+import { NavBar, type AuthMode } from "./components/navbar.tsx";
 import { OverviewPage } from "./components/overview-page.tsx";
 import {
   fetchAccounts,
@@ -18,58 +21,109 @@ import {
 } from "./lib/api.ts";
 import { authClient } from "./lib/auth-client.ts";
 
-type Mode = "sign-in" | "sign-up";
-type Page = "overview" | "accounts" | "transactions" | "connections";
-
-const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
-
-function pathToPage(pathname: string): Page {
-  if (pathname.startsWith("/transactions")) {
-    return "transactions";
-  }
-  if (pathname.startsWith("/connections")) {
-    return "connections";
-  }
-  if (pathname.startsWith("/accounts")) {
-    return "accounts";
-  }
-  return "overview";
-}
-
-function pageToPath(page: Page): string {
-  switch (page) {
-    case "transactions":
-      return "/transactions";
-    case "connections":
-      return "/connections";
-    case "accounts":
-      return "/accounts";
-    default:
-      return "/";
-  }
-}
+type Mode = AuthMode;
 
 export function App() {
   const { data: session, isPending } = authClient.useSession();
+
+  if (isPending) {
+    return (
+      <AppShell>
+        <p className="font-mono text-sm tracking-[0.12em] text-[var(--muted)] uppercase">
+          Checking session…
+        </p>
+      </AppShell>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/privacy"
+        element={
+          <AppShell>
+            <LegalPage document="privacy" />
+          </AppShell>
+        }
+      />
+      <Route
+        path="/terms"
+        element={
+          <AppShell>
+            <LegalPage document="terms" />
+          </AppShell>
+        }
+      />
+
+      {session ? (
+        <Route
+          element={
+            <AuthenticatedLayout user={{ name: session.user.name, email: session.user.email }} />
+          }
+        >
+          <Route index element={<OverviewPage />} />
+          <Route path="accounts" element={<AccountsPage />} />
+          <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="connections" element={<ConnectionsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      ) : (
+        <>
+          <Route index element={<AuthScreen />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </>
+      )}
+    </Routes>
+  );
+}
+
+function AuthenticatedLayout(props: { user: { name: string; email: string } }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onSignOut = async () => {
+    setBusy(true);
+    setError(null);
+
+    try {
+      await authClient.signOut();
+      void navigate("/", { replace: true });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Sign out failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
+      <div className="page-grid flex min-h-screen flex-col">
+        <NavBar user={props.user} busy={busy} onSignOut={() => void onSignOut()} />
+
+        <section className="mx-auto w-full max-w-[1440px] flex-1 px-6 pt-10 pb-16 sm:px-10 lg:px-16">
+          {error ? (
+            <div className="mb-6">
+              <ErrorBanner message={error} />
+            </div>
+          ) : null}
+          <Outlet />
+        </section>
+
+        <AppFooter />
+      </div>
+    </main>
+  );
+}
+
+function AuthScreen() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("sign-in");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [page, setPage] = useState<Page>(() => pathToPage(window.location.pathname));
-
-  useEffect(() => {
-    const onPopState = () => setPage(pathToPage(window.location.pathname));
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
-
-  const navigate = useCallback((next: Page) => {
-    const path = pageToPath(next);
-    window.history.pushState({}, "", path);
-    setPage(next);
-  }, []);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,7 +141,7 @@ export function App() {
         if (result.error) {
           setError(result.error.message ?? "Sign up failed.");
         } else {
-          navigate("overview");
+          void navigate("/", { replace: true });
         }
       } else {
         const result = await authClient.signIn.email({
@@ -98,7 +152,7 @@ export function App() {
         if (result.error) {
           setError(result.error.message ?? "Sign in failed.");
         } else {
-          navigate("overview");
+          void navigate("/", { replace: true });
         }
       }
     } catch (caught) {
@@ -108,109 +162,26 @@ export function App() {
     }
   };
 
-  const onSignOut = async () => {
-    setBusy(true);
-    setError(null);
-
-    try {
-      await authClient.signOut();
-      window.history.replaceState({}, "", "/");
-      setPage("overview");
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Sign out failed.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  if (isPending) {
-    return (
-      <Shell>
-        <p className="font-mono text-sm tracking-[0.12em] text-[var(--muted)] uppercase">
-          Checking session…
-        </p>
-      </Shell>
-    );
-  }
-
-  if (!session) {
-    return (
-      <Shell>
-        <AuthPanel
-          mode={mode}
-          setMode={setMode}
-          name={name}
-          setName={setName}
-          email={email}
-          setEmail={setEmail}
-          password={password}
-          setPassword={setPassword}
-          error={error}
-          busy={busy}
-          onSubmit={onSubmit}
-        />
-      </Shell>
-    );
-  }
-
   return (
-    <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
-      <div className="page-grid min-h-screen">
-        <NavBar
-          page={page}
-          user={{ name: session.user.name, email: session.user.email }}
-          busy={busy}
-          onNavigate={navigate}
-          onSignOut={() => void onSignOut()}
-        />
-
-        <section className="mx-auto w-full max-w-[1440px] px-6 pt-10 pb-16 sm:px-10 lg:px-16">
-          {page === "overview" ? <OverviewPage /> : null}
-          {page === "accounts" ? <AccountsPage /> : null}
-          {page === "transactions" ? <TransactionsPage /> : null}
-          {page === "connections" ? <ConnectionsPage /> : null}
-        </section>
-
-        <AppFooter />
-      </div>
-    </main>
-  );
-}
-
-function AppFooter() {
-  return (
-    <footer className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 border-t border-[var(--rule)] px-6 py-6 font-mono text-[10px] tracking-[0.13em] text-[var(--muted)] uppercase sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-16">
-      <p>© {new Date().getFullYear()} Numra</p>
-      <p>0.0.1-alpha</p>
-    </footer>
-  );
-}
-
-function Shell(props: { children: ReactNode }) {
-  return (
-    <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
-      <div className="page-grid min-h-screen">
-        <header className="bg-[var(--ink)] text-white">
-          <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
-            <a className="wordmark focus-ring text-white" href="/" aria-label="Numra home">
-              NUM<span className="text-[var(--sky)]">/</span>RA
-            </a>
-          </div>
-        </header>
-
-        <section className="mx-auto w-full max-w-[1440px] px-6 pt-10 pb-16 sm:px-10 lg:px-16">
-          {props.children}
-        </section>
-
-        <AppFooter />
-      </div>
-    </main>
+    <AppShell header={<NavBar variant="auth" mode={mode} onModeChange={setMode} />}>
+      <AuthPanel
+        mode={mode}
+        name={name}
+        setName={setName}
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        error={error}
+        busy={busy}
+        onSubmit={onSubmit}
+      />
+    </AppShell>
   );
 }
 
 function AuthPanel(props: {
   mode: Mode;
-  setMode: (mode: Mode) => void;
   name: string;
   setName: (value: string) => void;
   email: string;
@@ -224,38 +195,26 @@ function AuthPanel(props: {
   return (
     <div className="grid gap-12 pt-8 lg:grid-cols-[1.15fr_0.85fr]">
       <div>
-        <p className="mb-5 font-mono text-[11px] tracking-[0.22em] text-[var(--blue)] uppercase">
-          Access layer / allowlisted operators
-        </p>
         <h1 className="max-w-4xl text-[clamp(3.2rem,7vw,7rem)] leading-[0.86] font-black tracking-[-0.065em] uppercase">
-          Sign in to the
+          Control your
           <br />
-          <span className="text-[var(--blue)]">decision room.</span>
+          <span className="text-[var(--blue)]">personal finances.</span>
         </h1>
         <p className="mt-8 max-w-md text-lg leading-7 text-[var(--soft-ink)]">
-          Connect a bank (Mock ASPSP in sandbox, PKO BP / Revolut in production), sync a durable
-          ledger, and browse accounts and transactions. API:{" "}
-          <span className="font-mono text-sm text-[var(--ink)]">{apiUrl}</span>
+          See balances, track spending, and keep every account in one clear place — so you always
+          know where your money stands.
         </p>
       </div>
 
       <div className="border border-[var(--ink)] bg-[var(--panel)] p-6 shadow-[12px_12px_0_rgb(21_87_255_/_0.14)] sm:p-8">
         <form className="flex flex-col gap-5" onSubmit={props.onSubmit}>
-          <div className="flex gap-2 font-mono text-[10px] tracking-[0.16em] uppercase">
-            <button
-              type="button"
-              className={`focus-ring px-3 py-2 ${props.mode === "sign-in" ? "bg-[var(--ink)] text-white" : "border border-[var(--rule)]"}`}
-              onClick={() => props.setMode("sign-in")}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              className={`focus-ring px-3 py-2 ${props.mode === "sign-up" ? "bg-[var(--ink)] text-white" : "border border-[var(--rule)]"}`}
-              onClick={() => props.setMode("sign-up")}
-            >
-              Sign up
-            </button>
+          <div>
+            <p className="font-mono text-[10px] tracking-[0.16em] text-[var(--muted)] uppercase">
+              {props.mode === "sign-up" ? "New account" : "Welcome back"}
+            </p>
+            <h2 className="mt-2 text-2xl font-black tracking-[-0.03em]">
+              {props.mode === "sign-up" ? "Create your account" : "Sign in to Numra"}
+            </h2>
           </div>
 
           {props.mode === "sign-up" ? (
@@ -284,7 +243,7 @@ function AuthPanel(props: {
               value={props.email}
               onChange={(event) => props.setEmail(event.target.value)}
               autoComplete="email"
-              placeholder="dev@numra.local"
+              placeholder="you@example.com"
             />
           </label>
 
@@ -390,7 +349,7 @@ function ConnectionsPage() {
   const [aspsps, setAspsps] = useState<AspspOption[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  const flash = useMemo(() => new URLSearchParams(window.location.search), []);
+  const [searchParams] = useSearchParams();
 
   const load = useCallback(async () => {
     setError(null);
@@ -423,11 +382,12 @@ function ConnectionsPage() {
     }
   };
 
+  const connectStatus = searchParams.get("connect");
   const connectFlash =
-    flash.get("connect") === "success"
+    connectStatus === "success"
       ? "Bank connected. Initial sync has been queued."
-      : flash.get("connect") === "error"
-        ? (flash.get("message") ?? "Bank connection failed.")
+      : connectStatus === "error"
+        ? (searchParams.get("message") ?? "Bank connection failed.")
         : null;
 
   const catalog = aspsps ?? FALLBACK_ASPSPS;
@@ -447,7 +407,7 @@ function ConnectionsPage() {
       {connectFlash ? (
         <p
           className={`border px-3 py-2 text-sm ${
-            flash.get("connect") === "success"
+            connectStatus === "success"
               ? "border-emerald-300 bg-emerald-50 text-emerald-900"
               : "border-red-300 bg-red-50 text-red-800"
           }`}

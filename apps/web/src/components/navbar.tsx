@@ -1,26 +1,53 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 
 export type NavPage = "overview" | "accounts" | "transactions" | "connections";
+export type AuthMode = "sign-in" | "sign-up";
 
 export type NavUser = {
   name: string;
   email: string;
 };
 
-export type NavBarProps = {
-  page: NavPage;
+export type AppNavBarProps = {
+  variant?: "app";
   user: NavUser;
   busy?: boolean | undefined;
-  onNavigate: (page: NavPage) => void;
   onSignOut: () => void;
 };
 
-const NAV_ITEMS: { id: NavPage; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "accounts", label: "Accounts" },
-  { id: "transactions", label: "Transactions" },
-  { id: "connections", label: "Connections" },
+export type AuthNavBarProps = {
+  variant: "auth";
+  mode: AuthMode;
+  onModeChange: (mode: AuthMode) => void;
+};
+
+export type NavBarProps = AppNavBarProps | AuthNavBarProps;
+
+const NAV_ITEMS: { id: NavPage; label: string; to: string }[] = [
+  { id: "overview", label: "Overview", to: "/" },
+  { id: "accounts", label: "Accounts", to: "/accounts" },
+  { id: "transactions", label: "Transactions", to: "/transactions" },
+  { id: "connections", label: "Connections", to: "/connections" },
 ];
+
+const AUTH_ITEMS: { id: AuthMode; label: string }[] = [
+  { id: "sign-in", label: "Sign in" },
+  { id: "sign-up", label: "Sign up" },
+];
+
+export function pathToPage(pathname: string): NavPage {
+  if (pathname.startsWith("/transactions")) {
+    return "transactions";
+  }
+  if (pathname.startsWith("/connections")) {
+    return "connections";
+  }
+  if (pathname.startsWith("/accounts")) {
+    return "accounts";
+  }
+  return "overview";
+}
 
 function splitName(name: string): { first: string; last: string } {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -122,16 +149,20 @@ type PillRect = {
   height: number;
 };
 
-export function NavBar(props: NavBarProps) {
-  const menu = useMenu();
+function PillTabs<T extends string>(props: {
+  items: { id: T; label: string }[];
+  active: T;
+  onSelect: (id: T) => void;
+  label: string;
+}) {
   const tabListRef = useRef<HTMLDivElement>(null);
-  const tabRefs = useRef<Map<NavPage, HTMLButtonElement>>(new Map());
+  const tabRefs = useRef<Map<T, HTMLButtonElement>>(new Map());
   const [pill, setPill] = useState<PillRect | null>(null);
   const [pillReady, setPillReady] = useState(false);
 
   useLayoutEffect(() => {
     const measure = () => {
-      const tab = tabRefs.current.get(props.page);
+      const tab = tabRefs.current.get(props.active);
       const list = tabListRef.current;
       if (!tab || !list) {
         return;
@@ -161,62 +192,92 @@ export function NavBar(props: NavBarProps) {
     }
 
     return () => observer.disconnect();
-  }, [props.page]);
+  }, [props.active, props.items]);
+
+  return (
+    <div
+      ref={tabListRef}
+      role="tablist"
+      aria-label={props.label}
+      className="relative flex items-center gap-0.5 rounded-full border border-white/12 bg-white/6 p-1"
+    >
+      {pill ? (
+        <span
+          aria-hidden="true"
+          className={`nav-pill absolute rounded-full bg-[var(--blue)] shadow-sm ${
+            pillReady ? "nav-pill-ready" : ""
+          }`}
+          style={{
+            width: pill.width,
+            height: pill.height,
+            transform: `translate3d(${pill.left}px, ${pill.top}px, 0)`,
+          }}
+        />
+      ) : null}
+      {props.items.map((item) => {
+        const active = props.active === item.id;
+        return (
+          <button
+            key={item.id}
+            ref={(node) => {
+              if (node) {
+                tabRefs.current.set(item.id, node);
+              } else {
+                tabRefs.current.delete(item.id);
+              }
+            }}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => props.onSelect(item.id)}
+            className={`focus-ring relative z-10 rounded-full px-4 py-2 font-mono text-[10px] tracking-[0.14em] uppercase transition-colors duration-300 ${
+              active ? "text-white" : "text-white/55 hover:text-white"
+            }`}
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Wordmark() {
+  return (
+    <Link className="wordmark focus-ring text-white" to="/" aria-label="Numra home">
+      NUM<span className="text-[var(--sky)]">/</span>RA
+    </Link>
+  );
+}
+
+function AppNavBar(props: AppNavBarProps) {
+  const menu = useMenu();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const page = pathToPage(location.pathname);
 
   return (
     <header className="bg-[var(--ink)] text-white">
       <div className="relative mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
         <div className="z-10">
-          <a className="wordmark focus-ring text-white" href="/" aria-label="Numra home">
-            NUM<span className="text-[var(--sky)]">/</span>RA
-          </a>
+          <Wordmark />
         </div>
         <nav
           className="pointer-events-none absolute inset-x-0 flex justify-center"
           aria-label="Primary"
         >
-          <div
-            ref={tabListRef}
-            role="tablist"
-            className="pointer-events-auto relative flex items-center gap-0.5 rounded-full border border-white/12 bg-white/6 p-1"
-          >
-            {pill ? (
-              <span
-                aria-hidden="true"
-                className={`nav-pill absolute rounded-full bg-[var(--blue)] shadow-sm ${
-                  pillReady ? "nav-pill-ready" : ""
-                }`}
-                style={{
-                  width: pill.width,
-                  height: pill.height,
-                  transform: `translate3d(${pill.left}px, ${pill.top}px, 0)`,
-                }}
-              />
-            ) : null}
-            {NAV_ITEMS.map((item) => {
-              const active = props.page === item.id;
-              return (
-                <button
-                  key={item.id}
-                  ref={(node) => {
-                    if (node) {
-                      tabRefs.current.set(item.id, node);
-                    } else {
-                      tabRefs.current.delete(item.id);
-                    }
-                  }}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => props.onNavigate(item.id)}
-                  className={`focus-ring relative z-10 rounded-full px-4 py-2 font-mono text-[10px] tracking-[0.14em] uppercase transition-colors duration-300 ${
-                    active ? "text-white" : "text-white/55 hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
+          <div className="pointer-events-auto">
+            <PillTabs
+              items={NAV_ITEMS}
+              active={page}
+              onSelect={(id) => {
+                const item = NAV_ITEMS.find((entry) => entry.id === id);
+                if (item) {
+                  void navigate(item.to);
+                }
+              }}
+              label="Primary"
+            />
           </div>
         </nav>
         <div className="relative z-10 ml-auto" ref={menu.rootRef}>
@@ -252,4 +313,32 @@ export function NavBar(props: NavBarProps) {
       </div>
     </header>
   );
+}
+
+function AuthNavBar(props: AuthNavBarProps) {
+  return (
+    <header className="bg-[var(--ink)] text-white">
+      <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
+        <div className="z-10">
+          <Wordmark />
+        </div>
+        <nav className="z-10 ml-auto" aria-label="Authentication">
+          <PillTabs
+            items={AUTH_ITEMS}
+            active={props.mode}
+            onSelect={props.onModeChange}
+            label="Authentication"
+          />
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+export function NavBar(props: NavBarProps) {
+  if (props.variant === "auth") {
+    return <AuthNavBar {...props} />;
+  }
+
+  return <AppNavBar {...props} />;
 }
