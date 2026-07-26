@@ -53,6 +53,12 @@ overridden with `VITE_SENTRY_DSN`; the API reads `SENTRY_DSN` and
 `ENVIRONMENT` from Wrangler vars. Set `ENVIRONMENT` to `production` in the
 deployed Worker environment to enable 10% performance tracing.
 
+Legal pages (`/privacy`, `/terms`) require web env `VITE_OPERATOR_NAME`,
+`VITE_CONTACT_EMAIL`, and `VITE_SERVICE_URL` (see `apps/web/.env.example`).
+They are inlined at build time and the web app throws if any are missing —
+set them in `apps/web/.env.local` for dev and in the web deploy environment
+before `pnpm --filter @numra/web build`.
+
 The local seed allowlists `dev@numra.local` so you can sign up immediately.
 
 ## Commands
