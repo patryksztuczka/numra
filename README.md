@@ -117,29 +117,41 @@ apps/
   `apps/api/wrangler.jsonc` vars (`BETTER_AUTH_URL`, `WEB_ORIGIN`, …).
   Local `wrangler dev` overrides those via `apps/api/.dev.vars`.
 
-## Production (Cloudflare Workers)
+## Production (Cloudflare)
 
-Live API:
+Web:
 
-- URL: https://numra-api.patryk-sztuczka00.workers.dev
+- URL: https://numra.patryksztuczka.com
+- Pages project: `numra`
+- Pages fallback URL: https://numra-5vi.pages.dev
+- SPA fallback: `apps/web/public/_redirects`
+
+API:
+
+- URL: https://api.numra.patryksztuczka.com
+- Workers.dev fallback: https://numra-api.patryk-sztuczka00.workers.dev
 - Worker: `numra-api`
+- `BETTER_AUTH_URL`: `https://api.numra.patryksztuczka.com`
+- `WEB_ORIGIN`: `https://numra.patryksztuczka.com`
 - D1: `numra` (`665a7fa0-943b-4e3e-b148-d95ea6496603`)
 - Workflow: `numra-ledger-sync` (no cron on free plan)
 - Secrets: `BETTER_AUTH_SECRET`, `ENABLE_BANKING_APPLICATION_ID`,
   `ENABLE_BANKING_PRIVATE_KEY`, `ENCRYPTION_KEY`
 
+The Pages production and preview environments define `VITE_API_URL`,
+`VITE_SENTRY_DSN`, `VITE_OPERATOR_NAME`, `VITE_CONTACT_EMAIL`, and
+`VITE_SERVICE_URL`. Vite inlines these values during a build, so local direct
+uploads also need them in `apps/web/.env.local` or the calling environment.
+
 Register this Enable Banking redirect URL on the application:
 
 `https://numra-api.patryk-sztuczka00.workers.dev/connections/enable-banking/callback`
-
-`WEB_ORIGIN` is currently `http://localhost:5173` so the local web app can
-call the hosted API. Point it at the real web origin when the frontend is
-deployed.
 
 Redeploy after authenticating Wrangler (`wrangler login` or
 `CLOUDFLARE_API_TOKEN`):
 
 ```sh
+pnpm --filter @numra/web deploy
 pnpm --filter @numra/api deploy
 pnpm --filter @numra/api db:migrate:remote
 # secrets (once, or when rotating)

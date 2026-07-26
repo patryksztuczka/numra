@@ -30,10 +30,10 @@
   // Production defaults for `wrangler deploy`. Local `wrangler dev` overrides
   // these via `.dev.vars` (gitignored).
   "vars": {
-    "BETTER_AUTH_URL": "https://numra-api.patryk-sztuczka00.workers.dev",
+    "BETTER_AUTH_URL": "https://api.numra.patryksztuczka.com",
     "ENVIRONMENT": "production",
     "SENTRY_DSN": "https://528f99e809b93c305c7c81a3f15dee4b@o4511763138936832.ingest.de.sentry.io/4511763145556048",
-    "WEB_ORIGIN": "http://localhost:5173",
+    "WEB_ORIGIN": "https://numra.patryksztuczka.com",
     "ENABLE_BANKING_API_BASE": "https://api.enablebanking.com",
     "ENABLE_BANKING_REDIRECT_URL": "https://numra-api.patryk-sztuczka00.workers.dev/connections/enable-banking/callback",
   },

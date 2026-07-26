@@ -117,7 +117,6 @@ function AuthenticatedLayout(props: { user: { name: string; email: string } }) {
 }
 
 function AuthScreen() {
-  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("sign-in");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -141,7 +140,7 @@ function AuthScreen() {
         if (result.error) {
           setError(result.error.message ?? "Sign up failed.");
         } else {
-          void navigate("/", { replace: true });
+          window.location.reload();
         }
       } else {
         const result = await authClient.signIn.email({
@@ -152,7 +151,7 @@ function AuthScreen() {
         if (result.error) {
           setError(result.error.message ?? "Sign in failed.");
         } else {
-          void navigate("/", { replace: true });
+          window.location.reload();
         }
       }
     } catch (caught) {

@@ -6,6 +6,7 @@
   "scripts": {
     "build": "vite build",
     "clean": "rm -rf dist coverage",
+    "deploy": "vite build && wrangler pages deploy dist --project-name=numra --branch=master",
     "dev": "vite",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
@@ -25,6 +26,7 @@
     "@vitejs/plugin-react": "6.0.3",
     "tailwindcss": "4.3.3",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "wrangler": "4.112.0"
   }
 }
