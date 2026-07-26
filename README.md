@@ -145,7 +145,7 @@ uploads also need them in `apps/web/.env.local` or the calling environment.
 
 Register this Enable Banking redirect URL on the application:
 
-`https://numra-api.patryk-sztuczka00.workers.dev/connections/enable-banking/callback`
+`https://api.numra.patryksztuczka.com/connections/enable-banking/callback`
 
 Redeploy after authenticating Wrangler (`wrangler login` or
 `CLOUDFLARE_API_TOKEN`):
