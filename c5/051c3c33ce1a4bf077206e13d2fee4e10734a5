@@ -1,0 +1,33 @@
+apps/web/src/vite-env.d.ts
+  s_6fccc41c7b80a3::t_9c871a1ff4c545 6-11
+  s_6fccc41c7b80a3::t_462466e4310c03 1-5,12-16
+apps/web/src/components/legal-page.tsx
+  s_6fccc41c7b80a3::t_3818146e882d20 7-12,20-21,28,34,37-99,101-102,106,108-115,119,121-122,126,128-168,176,179-250,252-253,257,259-260,264,266-268,272,274,277-307,322,336-342,349-356
+  s_6fccc41c7b80a3::t_9edcbe06f9cde9 3-4,17-19
+apps/web/.env.example
+  s_6fccc41c7b80a3::t_10f4c2902d5c25 4-7
+  s_6fccc41c7b80a3::t_4e72ca8109a576 3
+README.md
+  s_6fccc41c7b80a3::t_6f33924bfcd150 56-60
+  s_6fccc41c7b80a3::t_2043a73b5c31b5 61
+apps/web/src/lib/site.ts
+  s_6fccc41c7b80a3::t_87f3b631f7ae42 1-10,12-13,16-18
+  s_6fccc41c7b80a3::t_b9022a26ffff36 11,14-15,19
+  s_6fccc41c7b80a3::t_576c6c2dde4908 20-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "c5051c3c33ce1a4bf077206e13d2fee4e10734a5",
+  "prompts": {},
+  "sessions": {
+    "s_6fccc41c7b80a3": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f9dd9-1c50-71e9-b4c3-87203ab28027",
+        "model": "grok-4.5"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
