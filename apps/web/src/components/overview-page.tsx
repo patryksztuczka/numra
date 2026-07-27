@@ -1,4 +1,7 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link } from "react-router";
+
+import { fetchAccounts, type BankAccount } from "../lib/api.ts";
 
 type MoneyItem = {
   id: string;
@@ -13,30 +16,8 @@ type MoneyItem = {
   counterparty?: string;
 };
 
-type AccountSlice = {
-  id: string;
-  name: string;
-  institution: string;
-  balanceMinor: number;
-};
-
 const CURRENCY = "PLN";
-
-/** Mock opening position — mirrors the synthetic Enable Banking dataset vibe. */
-const MOCK_ACCOUNTS: AccountSlice[] = [
-  {
-    id: "acc-pko",
-    name: "Everyday",
-    institution: "PKO BP",
-    balanceMinor: 642_137,
-  },
-  {
-    id: "acc-rev",
-    name: "Revolut",
-    institution: "Revolut",
-    balanceMinor: 200_000,
-  },
-];
+const EXCLUDED_ACCOUNTS_KEY = "numra.overview.excludedAccountIds";
 
 const INITIAL_INCOME: MoneyItem[] = [
   {
@@ -149,6 +130,14 @@ function formatPln(minor: number, opts?: { sign?: "always" | "never" | "auto" })
   return minor < 0 ? `−${body}` : body;
 }
 
+function formatBalance(minor: number, currency: string): string {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+  }).format(minor / 100);
+}
+
 function dayLabel(day: number): string {
   return `${String(day).padStart(2, "0")} Jul`;
 }
@@ -169,11 +158,73 @@ function sortChecklist(items: MoneyItem[]): MoneyItem[] {
 export function OverviewPage() {
   const [income, setIncome] = useState(INITIAL_INCOME);
   const [payments, setPayments] = useState(INITIAL_PAYMENTS);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(true);
+  const [accountsError, setAccountsError] = useState<string | null>(null);
+  const [manageAccountsOpen, setManageAccountsOpen] = useState(false);
+  const [excludedAccountIds, setExcludedAccountIds] = useState<Set<string>>(() => {
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem(EXCLUDED_ACCOUNTS_KEY) ?? "[]");
+      return new Set(
+        Array.isArray(stored) ? stored.filter((id): id is string => typeof id === "string") : [],
+      );
+    } catch {
+      return new Set();
+    }
+  });
 
-  const balanceMinor = useMemo(
-    () => MOCK_ACCOUNTS.reduce((acc, account) => acc + account.balanceMinor, 0),
-    [],
+  useEffect(() => {
+    localStorage.setItem(EXCLUDED_ACCOUNTS_KEY, JSON.stringify(Array.from(excludedAccountIds)));
+  }, [excludedAccountIds]);
+
+  useEffect(() => {
+    let active = true;
+    void fetchAccounts()
+      .then((result) => {
+        if (active) setAccounts(result.accounts);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setAccountsError(error instanceof Error ? error.message : "Failed to load balances.");
+        }
+      })
+      .finally(() => {
+        if (active) setAccountsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const accountsWithBalances = useMemo(
+    () =>
+      accounts.filter(
+        (account) =>
+          !excludedAccountIds.has(account.id) &&
+          typeof account.balanceMinor === "number" &&
+          Number.isFinite(account.balanceMinor),
+      ),
+    [accounts, excludedAccountIds],
   );
+  const includedAccounts = accounts.filter((account) => !excludedAccountIds.has(account.id));
+  const unavailableBalanceCount = includedAccounts.length - accountsWithBalances.length;
+  const balancesByCurrency = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const account of accountsWithBalances) {
+      const currency = account.balanceCurrency ?? account.currency;
+      totals.set(currency, (totals.get(currency) ?? 0) + (account.balanceMinor ?? 0));
+    }
+    return Array.from(totals, ([currency, minor]) => ({ currency, minor })).toSorted(
+      (left, right) => Number(right.currency === CURRENCY) - Number(left.currency === CURRENCY),
+    );
+  }, [accountsWithBalances]);
+  const balanceMinor = balancesByCurrency.find(({ currency }) => currency === CURRENCY)?.minor ?? 0;
+  const oldestSync = accountsWithBalances.reduce<string | null>((oldest, account) => {
+    if (!account.balanceSyncedAt) return oldest;
+    if (!oldest || new Date(account.balanceSyncedAt) < new Date(oldest))
+      return account.balanceSyncedAt;
+    return oldest;
+  }, null);
 
   const unpaidBillsMinor = useMemo(() => sumAmount(payments, (item) => !item.checked), [payments]);
   const paidBillsMinor = useMemo(() => sumAmount(payments, (item) => item.checked), [payments]);
@@ -187,6 +238,15 @@ export function OverviewPage() {
   const paymentsCheckedCount = payments.filter((item) => item.checked).length;
 
   const leftAfterFixedMinor = incomeInMinor - totalBillsMinor;
+
+  const toggleAccount = (id: string) => {
+    setExcludedAccountIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const toggleIncome = (id: string) => {
     setIncome((items) =>
@@ -224,9 +284,44 @@ export function OverviewPage() {
             <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--muted)] uppercase">
               Liquid cash
             </p>
-            <p className="mt-2 font-mono text-[clamp(2.4rem,6vw,3.75rem)] leading-none font-black tracking-[-0.04em] text-[var(--ink)] tabular-nums">
-              {formatPln(balanceMinor, { sign: "never" })}
-            </p>
+            {accountsLoading ? (
+              <div
+                className="mt-3 h-14 w-64 animate-pulse bg-[var(--rule)]"
+                aria-label="Loading balances"
+              />
+            ) : balancesByCurrency.length > 0 ? (
+              <div className="mt-2">
+                {balancesByCurrency.map(({ currency, minor }, index) =>
+                  currency === CURRENCY ? (
+                    <p
+                      key={currency}
+                      className="font-mono text-[clamp(2rem,4.5vw,3rem)] leading-none font-black tracking-[-0.04em] text-[var(--ink)] tabular-nums"
+                    >
+                      {formatBalance(minor, currency)}
+                    </p>
+                  ) : (
+                    <div
+                      key={currency}
+                      className={`${index === 0 ? "mt-0" : "mt-3"} flex items-baseline gap-3`}
+                    >
+                      <span className="font-mono text-[9px] tracking-[0.16em] text-[var(--muted)] uppercase">
+                        Other currency
+                      </span>
+                      <span className="font-mono text-lg font-semibold tracking-[-0.02em] text-[var(--soft-ink)] tabular-nums">
+                        {formatBalance(minor, currency)}
+                      </span>
+                    </div>
+                  ),
+                )}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-[var(--soft-ink)]">
+                {accountsError ??
+                  (includedAccounts.length === 0
+                    ? "No accounts included in overview."
+                    : "No synced balances yet.")}
+              </p>
+            )}
             <p className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="font-mono text-[10px] tracking-[0.16em] text-[var(--muted)] uppercase">
                 After unpaid bills
@@ -239,22 +334,92 @@ export function OverviewPage() {
                 {formatPln(afterBillsMinor, { sign: "never" })}
               </span>
             </p>
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {MOCK_ACCOUNTS.map((account) => (
-                <li
-                  key={account.id}
-                  className="border border-[var(--rule)] bg-white px-3 py-2 font-mono text-[10px] tracking-[0.08em] text-[var(--soft-ink)] uppercase"
-                >
-                  <span className="text-[var(--muted)]">{account.institution}</span>
-                  <span className="mx-2 text-[var(--rule)]">·</span>
-                  <span>{account.name}</span>
-                  <span className="mx-2 text-[var(--rule)]">·</span>
-                  <span className="text-[var(--ink)] tabular-nums">
-                    {formatPln(account.balanceMinor, { sign: "never" })}
+            {!accountsLoading && accounts.length > 0 ? (
+              <div className="mt-6 max-w-xl border-t border-[var(--rule)] font-mono text-[11px]">
+                <ul className="divide-y divide-[var(--rule)]">
+                  {includedAccounts.slice(0, 3).map((account) => (
+                    <li key={account.id} className="flex items-center justify-between gap-4 py-2.5">
+                      <span className="min-w-0 truncate text-[var(--soft-ink)]">
+                        <span className="text-[var(--ink)]">{account.displayName}</span>
+                        <span className="text-[var(--muted)]"> · {account.aspspName}</span>
+                      </span>
+                      <span className="shrink-0 tabular-nums">
+                        {account.balanceMinor === null
+                          ? "Unavailable"
+                          : formatBalance(
+                              account.balanceMinor,
+                              account.balanceCurrency ?? account.currency,
+                            )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--rule)] pt-2.5 text-[10px] tracking-[0.08em] text-[var(--muted)] uppercase">
+                  <span>
+                    {includedAccounts.length} of {accounts.length} included
+                    {oldestSync
+                      ? ` · balances since ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(oldestSync))}`
+                      : ""}
+                    {unavailableBalanceCount > 0 ? ` · ${unavailableBalanceCount} unavailable` : ""}
                   </span>
-                </li>
-              ))}
-            </ul>
+                  <button
+                    type="button"
+                    className="focus-ring text-[var(--blue)] hover:underline"
+                    aria-expanded={manageAccountsOpen}
+                    onClick={() => setManageAccountsOpen((open) => !open)}
+                  >
+                    {manageAccountsOpen ? "Done" : "Manage"}
+                  </button>
+                </div>
+                {manageAccountsOpen ? (
+                  <div className="mt-3 border border-[var(--ink)] bg-white p-3 shadow-[5px_5px_0_rgb(21_87_255_/_0.12)]">
+                    <p className="mb-2 text-[10px] tracking-[0.14em] text-[var(--muted)] uppercase">
+                      Included in overview
+                    </p>
+                    <ul className="divide-y divide-[var(--rule)]">
+                      {accounts.map((account) => (
+                        <li key={account.id}>
+                          <label className="flex cursor-pointer items-center gap-3 py-2.5">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-[var(--blue)]"
+                              checked={!excludedAccountIds.has(account.id)}
+                              onChange={() => toggleAccount(account.id)}
+                            />
+                            <span className="min-w-0 flex-1 truncate text-[var(--soft-ink)]">
+                              {account.displayName} · {account.aspspName}
+                            </span>
+                            <span className="shrink-0 text-[var(--ink)] tabular-nums">
+                              {account.balanceMinor === null
+                                ? "Unavailable"
+                                : formatBalance(
+                                    account.balanceMinor,
+                                    account.balanceCurrency ?? account.currency,
+                                  )}
+                            </span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-2 flex justify-between border-t border-[var(--rule)] pt-2">
+                      <button
+                        type="button"
+                        className="focus-ring text-[var(--blue)] hover:underline"
+                        onClick={() => setExcludedAccountIds(new Set())}
+                      >
+                        Select all
+                      </button>
+                      <Link
+                        className="focus-ring text-[var(--blue)] hover:underline"
+                        to="/accounts"
+                      >
+                        View accounts
+                      </Link>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div className="flex flex-col justify-between gap-6 border-t border-[var(--rule)] pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
