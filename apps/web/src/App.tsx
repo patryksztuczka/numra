@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Navigate, Outlet, Route, Routes, useNavigate, useSearchParams } from "react-router";
 
 import { AppFooter, AppShell } from "./components/app-shell.tsx";
@@ -550,18 +550,38 @@ function TransactionsPage() {
   const [items, setItems] = useState<LedgerTransaction[] | null>(null);
   const [accountId, setAccountId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const requestIdRef = useRef(0);
 
-  const load = useCallback(async (filterAccountId?: string) => {
+  const load = useCallback(async (filterAccountId?: string, offset = 0) => {
+    const requestId = offset === 0 ? ++requestIdRef.current : requestIdRef.current;
     setError(null);
+    if (offset > 0) setLoadingMore(true);
+
     try {
       const [accountsResult, txResult] = await Promise.all([
-        fetchAccounts(),
-        fetchTransactions(filterAccountId ? { accountId: filterAccountId } : undefined),
+        offset === 0 ? fetchAccounts() : Promise.resolve(null),
+        fetchTransactions({
+          ...(filterAccountId ? { accountId: filterAccountId } : {}),
+          limit: 50,
+          offset,
+        }),
       ]);
-      setAccounts(accountsResult.accounts);
-      setItems(txResult.items);
+
+      if (requestId !== requestIdRef.current) return;
+      if (accountsResult) setAccounts(accountsResult.accounts);
+      setItems((current) =>
+        offset === 0 ? txResult.items : [...(current ?? []), ...txResult.items],
+      );
+      setHasMore(offset + txResult.items.length < txResult.pagination.total);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Failed to load transactions.");
+      if (requestId === requestIdRef.current) {
+        setError(caught instanceof Error ? caught.message : "Failed to load transactions.");
+      }
+    } finally {
+      if (requestId === requestIdRef.current) setLoadingMore(false);
     }
   }, []);
 
@@ -569,13 +589,33 @@ function TransactionsPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasMore || loadingMore || !items) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) void load(accountId || undefined, items.length);
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [accountId, hasMore, items, load, loadingMore]);
+
+  const transactionsByDate = items
+    ? Array.from(
+        items.reduce((groups, transaction) => {
+          const group = groups.get(transaction.bookingDate) ?? [];
+          group.push(transaction);
+          groups.set(transaction.bookingDate, group);
+          return groups;
+        }, new Map<string, LedgerTransaction[]>()),
+      )
+    : [];
+
   return (
     <div className="space-y-8">
-      <PageHeader
-        kicker="Ledger / cash movements"
-        title="Transactions"
-        body="Booked movements stored as integer minor units. Filter by account to focus on one ledger stream."
-      />
       {error ? <ErrorBanner message={error} /> : null}
 
       <label className="flex max-w-md flex-col gap-2 text-sm">
@@ -589,6 +629,7 @@ function TransactionsPage() {
             const value = event.target.value;
             setAccountId(value);
             setItems(null);
+            setHasMore(false);
             void load(value || undefined);
           }}
         >
@@ -609,42 +650,49 @@ function TransactionsPage() {
           body="After a bank is connected, the hourly ETL (and the initial post-connect sync) fills this list from Enable Banking."
         />
       ) : (
-        <div className="overflow-x-auto border border-[var(--rule)] bg-white">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-[var(--rule)] bg-[var(--panel)] font-mono text-[10px] tracking-[0.14em] text-[var(--muted)] uppercase">
-              <tr>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Account</th>
-                <th className="px-4 py-3">Description</th>
-                <th className="px-4 py-3 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-[var(--rule)] last:border-0">
-                  <td className="px-4 py-3 whitespace-nowrap text-[var(--soft-ink)]">
-                    {formatDate(item.bookingDate)}
-                  </td>
-                  <td className="px-4 py-3">{item.accountName ?? "Account"}</td>
-                  <td className="px-4 py-3">
-                    <div>{item.description ?? "—"}</div>
-                    {item.counterpartyName ? (
-                      <div className="font-mono text-[11px] text-[var(--muted)]">
-                        {item.counterpartyName}
-                      </div>
-                    ) : null}
-                  </td>
-                  <td
-                    className={`px-4 py-3 text-right font-mono text-xs whitespace-nowrap ${
-                      item.signedAmountMinor < 0 ? "text-red-800" : "text-emerald-800"
-                    }`}
+        <div className="space-y-8">
+          {transactionsByDate.map(([date, transactions]) => (
+            <section key={date} aria-labelledby={`transactions-${date}`}>
+              <h2
+                id={`transactions-${date}`}
+                className="mb-2 text-sm font-medium text-[var(--soft-ink)]"
+              >
+                {formatDate(date)}
+              </h2>
+
+              <div className="border-x border-t border-[var(--rule)] bg-white">
+                {transactions.map((item) => (
+                  <article
+                    key={item.id}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 border-b border-[var(--rule)] px-4 py-4 sm:grid-cols-[minmax(9rem,0.45fr)_minmax(0,1fr)_auto] sm:items-center"
                   >
-                    {formatMoney(item.signedAmountMinor, item.currency)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <p className="truncate text-xs text-[var(--soft-ink)] sm:text-sm">
+                      {item.accountName ?? "Account"}
+                    </p>
+                    <div className="min-w-0 sm:row-start-1">
+                      <p className="truncate text-sm font-medium">{item.description ?? "—"}</p>
+                      {item.counterpartyName ? (
+                        <p className="truncate font-mono text-[11px] text-[var(--muted)]">
+                          {item.counterpartyName}
+                        </p>
+                      ) : null}
+                    </div>
+                    <p
+                      className={`col-start-2 row-span-2 row-start-1 self-center text-right font-mono text-xs whitespace-nowrap sm:col-start-3 ${
+                        item.signedAmountMinor < 0 ? "text-red-800" : "text-emerald-800"
+                      }`}
+                    >
+                      {formatMoney(item.signedAmountMinor, item.currency)}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+          <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
+          {loadingMore ? (
+            <p className="py-2 text-center font-mono text-xs text-[var(--muted)]">Loading more…</p>
+          ) : null}
         </div>
       )}
     </div>

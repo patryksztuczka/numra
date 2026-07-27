@@ -137,10 +137,20 @@ export async function fetchAccounts() {
   return accountsResponseSchema.parse(await apiFetch("/accounts"));
 }
 
-export async function fetchTransactions(params?: { accountId?: string }) {
+export async function fetchTransactions(params?: {
+  accountId?: string;
+  limit?: number;
+  offset?: number;
+}) {
   const search = new URLSearchParams();
   if (params?.accountId) {
     search.set("accountId", params.accountId);
+  }
+  if (params?.limit !== undefined) {
+    search.set("limit", String(params.limit));
+  }
+  if (params?.offset !== undefined) {
+    search.set("offset", String(params.offset));
   }
   const query = search.toString();
   return transactionsResponseSchema.parse(
