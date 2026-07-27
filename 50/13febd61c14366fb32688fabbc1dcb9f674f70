@@ -1,0 +1,89 @@
+apps/api/src/finance/finance.test.ts
+  s_d384501bceac10::t_84dfb5d2de171b 199
+  s_d384501bceac10::t_724bebf33d6fdf 36,198,200-209
+  s_d384501bceac10::t_d2d096277e3b1b 39-43,187-197
+apps/api/src/enable-banking/client.ts
+  s_d384501bceac10::t_2a19202adb5fc5 216-231
+  s_d384501bceac10::t_79f2907c0fa619 215,232
+  s_d384501bceac10::t_ac87d9e8875a09 7,74-88,211-214
+  s_d384501bceac10::t_3ec4fb8a988281 233-235
+apps/api/src/enable-banking/types.ts
+  s_d384501bceac10::t_0b0ab40b866b0a 52-66,104
+  s_d384501bceac10::t_2ce25086efe176 105
+apps/api/src/finance/routes.ts
+  s_d384501bceac10::t_fbd557cb83c0ff 13,25-28,178-195
+  s_49acb42659fece::t_b74fa87a94721e 196
+apps/api/src/enable-banking/index.ts
+  s_d384501bceac10::t_2465f02c8b1a64 9-10
+apps/web/src/styles.css
+  s_d384501bceac10::t_75c153edc1a49b 119-178,353-360,363-367,376-377,415-496,499-592,605-611,613-654,670-676,678-680,682-692
+  s_d384501bceac10::t_26976b9b30ecab 179-352,497-498,593-604,655-669,693-695
+  s_d384501bceac10::t_2af67ee45b1c62 362,378-414,612,677,681
+  s_d384501bceac10::t_11eb7579958ebb 361,368-375
+apps/web/src/lib/api.ts
+  s_d384501bceac10::t_e21cdabd7d551e 149-155
+  s_d384501bceac10::t_5bf338d0725a89 21-24
+  s_d384501bceac10::t_17cb30f7d671e4 43-47
+apps/api/src/test/fake-enable-banking.ts
+  s_d384501bceac10::t_6e3634b5c763d2 3,11-12,72-81,117-130
+  s_d384501bceac10::t_b982c87a706207 131-132
+apps/api/src/finance/etl.ts
+  s_d384501bceac10::t_2495de5820e1bb 5-9,12,19,61,98-109,170-207,210
+  s_d384501bceac10::t_8b8d0413f17f2c 208-209
+apps/web/src/App.tsx
+  s_d384501bceac10::t_b02ddc43446e70 582,584-594
+  s_d384501bceac10::t_eb612607471394 734,747-761,765,778
+  s_d384501bceac10::t_58f14021d423e3 516,518-565,573-577,623-633,635-730,769
+  s_d384501bceac10::t_d1b58be8fe0f1e 1-8
+  s_d384501bceac10::t_487f2fa21159fa 512-515
+  s_d384501bceac10::t_87527d5d9e86a7 517
+  s_d384501bceac10::t_e810218a16e88a 494,498-511,763,767,771
+  s_d384501bceac10::t_dc71a28fa163af 23,566-572,579,581,583,595-622
+  s_d384501bceac10::t_a5458506a372e9 578,580,634
+  s_d384501bceac10::t_521a75c84032a2 495-497
+  s_49acb42659fece::t_a9a40fc53e844c 768,770
+apps/api/src/finance/connections.ts
+  s_d384501bceac10::t_768334de3f918e 230-234,255-259
+  s_d384501bceac10::t_234b86def77f13 1,266-296
+  s_d384501bceac10::t_697b728bf02950 242-246
+  s_d384501bceac10::t_8d8c1fab42e3f3 297-298
+apps/api/drizzle/0003_ancient_kang.sql
+  s_d384501bceac10::t_caf9eb03bdea3c 1
+apps/api/src/app.ts
+  s_d384501bceac10::t_29e10b5879c738 17
+apps/api/src/db/schema.ts
+  s_d384501bceac10::t_53d362cc7cfc88 134-138
+  s_d384501bceac10::t_10fac5987ac1bd 139
+apps/api/drizzle/0002_square_thanos.sql
+  s_d384501bceac10::t_f1b9bddfcbdc58 1-5
+apps/api/drizzle/meta/0002_snapshot.json
+  s_d384501bceac10::t_861866d6a9124f 1-765
+apps/api/drizzle/meta/0003_snapshot.json
+  s_d384501bceac10::t_fc2edcade87a14 1-772
+apps/api/drizzle/meta/_journal.json
+  s_d384501bceac10::t_938acaf89581c0 18-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "5013febd61c14366fb32688fabbc1dcb9f674f70",
+  "prompts": {},
+  "sessions": {
+    "s_49acb42659fece": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f93f8-93a9-7453-b108-ab4dcfa9af40",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    },
+    "s_d384501bceac10": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019fa563-f43f-7b44-9793-9d4e9a70a426",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
