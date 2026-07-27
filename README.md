@@ -115,7 +115,7 @@ apps/
 - Configure production secrets with Wrangler (`BETTER_AUTH_SECRET`,
   Enable Banking credentials, `ENCRYPTION_KEY`). Public config lives in
   `apps/api/wrangler.jsonc` vars (`BETTER_AUTH_URL`, `WEB_ORIGIN`, …).
-  Local `wrangler dev` overrides those via `apps/api/.dev.vars`.
+  Local `wrangler dev` overrides those via `apps/api/.env`.
 
 ## Production (Cloudflare)
 

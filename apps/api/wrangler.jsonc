@@ -28,7 +28,7 @@
     },
   ],
   // Production defaults for `wrangler deploy`. Local `wrangler dev` overrides
-  // these via `.dev.vars` (gitignored).
+  // these via `.env` (gitignored).
   "vars": {
     "BETTER_AUTH_URL": "https://api.numra.patryksztuczka.com",
     "ENVIRONMENT": "production",
