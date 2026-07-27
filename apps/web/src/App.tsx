@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+} from "react";
 import { Navigate, Outlet, Route, Routes, useNavigate, useSearchParams } from "react-router";
 
 import { AppFooter, AppShell } from "./components/app-shell.tsx";
@@ -13,6 +20,7 @@ import {
   formatDate,
   formatDateTime,
   formatMoney,
+  saveAccountOrder,
   startBankConnect,
   type AspspOption,
   type BankAccount,
@@ -483,9 +491,247 @@ function ConnectionsPage() {
   );
 }
 
+function formatAccountBalance(item: BankAccount): string {
+  if (typeof item.balanceMinor !== "number" || !Number.isFinite(item.balanceMinor)) {
+    return "Balance unavailable";
+  }
+
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: item.balanceCurrency ?? item.currency,
+    minimumFractionDigits: 2,
+  }).format(item.balanceMinor / 100);
+}
+
+function balanceTypeLabel(type: string | null): string {
+  if (type === "CLBD") return "Booked balance";
+  if (type === "ITAV") return "Available balance";
+  return type ? `${type} balance` : "Reported balance";
+}
+
+function accountTileStyle(index: number): CSSProperties & { "--tile-index": number } {
+  return { "--tile-index": index };
+}
+
+type AccountsVariant = "bento" | "ledger" | "cards" | "currencies" | "compare";
+
+function AccountTile(props: { item: BankAccount; index: number }) {
+  const { item, index } = props;
+  return (
+    <article
+      className={`account-tile ${index === 0 ? "account-tile-primary" : ""}`}
+      style={accountTileStyle(index)}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="account-institution">
+            {item.aspspName} <span>{item.aspspCountry}</span>
+          </p>
+          <p className="mt-2 truncate text-lg font-semibold tracking-[-0.025em]">
+            {item.name?.trim() || "Unnamed account"}
+          </p>
+        </div>
+        <div className="account-currency" aria-label={`Currency ${item.currency}`}>
+          {item.currency}
+        </div>
+      </div>
+      <div className="account-balance-block">
+        <p className="account-balance">{formatAccountBalance(item)}</p>
+        <p className="account-balance-kind">{balanceTypeLabel(item.balanceType)}</p>
+      </div>
+      <div className="account-rule" />
+      <dl className="account-details">
+        <div>
+          <dt>Account</dt>
+          <dd>{item.ibanMasked ?? "Identifier unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Balance date</dt>
+          <dd>{formatDate(item.balanceAsOf)}</dd>
+        </div>
+        <div>
+          <dt>Last retrieved</dt>
+          <dd>{formatDateTime(item.balanceSyncedAt)}</dd>
+        </div>
+      </dl>
+      <div className="account-corner-mark" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+    </article>
+  );
+}
+
+function AccountsView(props: {
+  variant: AccountsVariant;
+  items: BankAccount[];
+  onReorder?: (items: BankAccount[]) => void;
+}) {
+  const { variant, items, onReorder } = props;
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  if (variant === "ledger") {
+    return (
+      <div className="accounts-ledger">
+        {items.map((item, index) => (
+          <button
+            key={item.id}
+            type="button"
+            className={`ledger-row ${draggedId === item.id ? "ledger-row-dragging" : ""}`}
+            aria-label={`Move ${item.name?.trim() || "account"}. Use arrow keys to reorder.`}
+            draggable
+            onKeyDown={(event) => {
+              const offset = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0;
+              const destination = index + offset;
+              if (offset === 0 || destination < 0 || destination >= items.length) return;
+              event.preventDefault();
+              const reordered = [...items];
+              const [moved] = reordered.splice(index, 1);
+              if (!moved) return;
+              reordered.splice(destination, 0, moved);
+              onReorder?.(reordered);
+            }}
+            onDragStart={(event) => {
+              setDraggedId(item.id);
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", item.id);
+            }}
+            onDragEnd={() => setDraggedId(null)}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "move";
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              const sourceId = event.dataTransfer.getData("text/plain");
+              const sourceIndex = items.findIndex((account) => account.id === sourceId);
+              if (sourceIndex < 0 || sourceIndex === index) return;
+              const reordered = [...items];
+              const [moved] = reordered.splice(sourceIndex, 1);
+              if (!moved) return;
+              reordered.splice(index, 0, moved);
+              setDraggedId(null);
+              onReorder?.(reordered);
+            }}
+          >
+            <span className="ledger-drag-handle" aria-label={`Move ${item.name ?? "account"}`}>
+              <i />
+              <i />
+              <i />
+            </span>
+            <span className="ledger-index">{String(index + 1).padStart(2, "0")}</span>
+            <div className="min-w-0">
+              <p className="font-semibold">{item.name?.trim() || "Unnamed account"}</p>
+              <p className="ledger-secondary">{item.ibanMasked ?? item.aspspName}</p>
+            </div>
+            <p className="ledger-bank">{item.aspspName}</p>
+            <div>
+              <p className="ledger-amount">{formatAccountBalance(item)}</p>
+              <p className="ledger-secondary text-right">{balanceTypeLabel(item.balanceType)}</p>
+            </div>
+            <p className="ledger-date">{formatDate(item.balanceAsOf)}</p>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (variant === "cards") {
+    return (
+      <div className="accounts-card-deck">
+        {items.map((item, index) => (
+          <article key={item.id} className="bank-card" style={accountTileStyle(index)}>
+            <div className="flex items-start justify-between">
+              <p className="bank-card-bank">{item.aspspName}</p>
+              <p className="bank-card-currency">{item.currency}</p>
+            </div>
+            <p className="bank-card-name">{item.name?.trim() || "Unnamed account"}</p>
+            <p className="bank-card-balance">{formatAccountBalance(item)}</p>
+            <div className="flex items-end justify-between gap-4">
+              <p className="bank-card-iban">{item.ibanMasked ?? "No identifier"}</p>
+              <p className="bank-card-sync">Updated {formatDateTime(item.balanceSyncedAt)}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    );
+  }
+
+  if (variant === "currencies") {
+    const groups = Map.groupBy(items, (item) => item.balanceCurrency ?? item.currency);
+    return (
+      <div className="currency-lanes">
+        {Array.from(groups).map(([currency, accounts]) => (
+          <section key={currency} className="currency-lane">
+            <div className="currency-lane-label">
+              <span>{currency}</span>
+              <small>{accounts.length} accounts</small>
+            </div>
+            <div className="currency-lane-items">
+              {accounts.map((item) => (
+                <article key={item.id} className="currency-account">
+                  <div>
+                    <p className="font-semibold">{item.name?.trim() || "Unnamed account"}</p>
+                    <p>{item.aspspName}</p>
+                  </div>
+                  <div className="text-right">
+                    <strong>{formatAccountBalance(item)}</strong>
+                    <p>{item.ibanMasked ?? "No identifier"}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  if (variant === "compare") {
+    const maxBalance = Math.max(1, ...items.map((item) => Math.abs(item.balanceMinor ?? 0)));
+    return (
+      <div className="accounts-compare">
+        {items.map((item, index) => {
+          const width = Math.max(2, (Math.abs(item.balanceMinor ?? 0) / maxBalance) * 100);
+          return (
+            <article key={item.id} className="compare-row">
+              <div className="compare-heading">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <div>
+                  <p>{item.name?.trim() || "Unnamed account"}</p>
+                  <small>{item.aspspName}</small>
+                </div>
+                <strong>{formatAccountBalance(item)}</strong>
+              </div>
+              <div className="compare-track" aria-hidden="true">
+                <span style={{ width: `${width}%` }} />
+              </div>
+              <div className="compare-meta">
+                <span>{item.currency}</span>
+                <span>{item.ibanMasked ?? "No identifier"}</span>
+                <span>As of {formatDate(item.balanceAsOf)}</span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="accounts-bento">
+      {items.map((item, index) => (
+        <AccountTile key={item.id} item={item} index={index} />
+      ))}
+    </div>
+  );
+}
+
 function AccountsPage() {
   const [items, setItems] = useState<BankAccount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -498,48 +744,38 @@ function AccountsPage() {
     })();
   }, []);
 
+  const onReorder = async (reordered: BankAccount[]) => {
+    const previous = items;
+    setItems(reordered);
+    setSavingOrder(true);
+    setError(null);
+    try {
+      await saveAccountOrder(reordered.map((account) => account.id));
+    } catch (caught) {
+      setItems(previous);
+      setError(caught instanceof Error ? caught.message : "Failed to save account order.");
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
   return (
-    <div className="space-y-8">
-      <PageHeader
-        kicker="Ledger / accounts"
-        title="Accounts"
-        body="Bank accounts stored in Numra after a successful Enable Banking consent. Reads never hit the live bank API."
-      />
+    <div>
       {error ? <ErrorBanner message={error} /> : null}
+      {savingOrder ? <p className="account-order-saving">Saving order…</p> : null}
       {items === null ? (
-        <p className="font-mono text-sm text-[var(--muted)]">Loading accounts…</p>
+        <div className="accounts-loading-grid" aria-label="Loading accounts">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="account-skeleton" />
+          ))}
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           title="No accounts yet"
           body="Accounts appear here after you connect a bank and complete consent."
         />
       ) : (
-        <div className="overflow-x-auto border border-[var(--rule)] bg-white">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-[var(--rule)] bg-[var(--panel)] font-mono text-[10px] tracking-[0.14em] text-[var(--muted)] uppercase">
-              <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Institution</th>
-                <th className="px-4 py-3">Currency</th>
-                <th className="px-4 py-3">Identifier</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-[var(--rule)] last:border-0">
-                  <td className="px-4 py-3 font-medium">{item.name ?? "Unnamed account"}</td>
-                  <td className="px-4 py-3 text-[var(--soft-ink)]">
-                    {item.aspspName} ({item.aspspCountry})
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs">{item.currency}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-[var(--soft-ink)]">
-                    {item.ibanMasked ?? "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AccountsView variant="ledger" items={items} onReorder={(next) => void onReorder(next)} />
       )}
     </div>
   );

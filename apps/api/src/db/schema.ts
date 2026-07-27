@@ -131,6 +131,12 @@ export const bankAccounts = sqliteTable(
     name: text("name"),
     currency: text("currency").notNull(),
     iban: text("iban"),
+    balanceMinor: integer("balance_minor"),
+    balanceCurrency: text("balance_currency"),
+    balanceType: text("balance_type"),
+    balanceAsOf: text("balance_as_of"),
+    balanceSyncedAt: integer("balance_synced_at", { mode: "timestamp_ms" }),
+    displayOrder: integer("display_order"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .$defaultFn(() => new Date())
       .notNull(),

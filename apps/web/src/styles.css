@@ -116,6 +116,583 @@ a {
   box-shadow: 12px 12px 0 rgb(21 87 255 / 0.14);
 }
 
+.accounts-view-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.variant-switch {
+  display: flex;
+  overflow-x: auto;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  background: rgb(248 251 255 / 0.75);
+}
+
+.variant-switch button {
+  padding: 0.65rem 0.9rem;
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.63rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.variant-switch button[aria-pressed="true"] {
+  color: white;
+  background: var(--ink);
+}
+
+.variant-switch button:focus-visible,
+.accounts-order select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.accounts-order {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.accounts-order select {
+  min-width: 11.5rem;
+  padding: 0.65rem 2rem 0.65rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  color: var(--ink);
+  background: var(--panel);
+  font: inherit;
+  cursor: pointer;
+}
+
+.accounts-bento,
+.accounts-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.account-tile,
+.account-skeleton {
+  grid-column: span 6;
+  min-height: 25rem;
+}
+
+.account-tile {
+  --tile-index: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(1.4rem, 3vw, 2.25rem);
+  border: 1px solid var(--rule);
+  background: rgb(248 251 255 / 0.92);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset;
+  animation: account-tile-in 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--tile-index) * 65ms);
+}
+
+.account-tile-primary {
+  grid-column: span 7;
+  grid-row: span 2;
+  min-height: 33rem;
+  color: white;
+  border-color: #0d45d0;
+  background: var(--blue);
+  box-shadow: 14px 14px 0 rgb(21 87 255 / 0.13);
+}
+
+.account-tile-primary + .account-tile {
+  grid-column: span 5;
+}
+
+.account-institution,
+.account-balance-kind,
+.account-details dt {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.account-institution {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.account-institution span {
+  margin-left: 0.35rem;
+  opacity: 0.7;
+}
+
+.account-tile-primary .account-institution,
+.account-tile-primary .account-balance-kind,
+.account-tile-primary .account-details dt {
+  color: rgb(255 255 255 / 0.68);
+}
+
+.account-currency {
+  display: grid;
+  width: 3.15rem;
+  height: 3.15rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.account-tile-primary .account-currency {
+  border-color: rgb(255 255 255 / 0.42);
+}
+
+.account-balance-block {
+  margin-block: auto;
+  padding-block: 3.5rem 2.5rem;
+}
+
+.account-balance {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-family: "Arial Narrow", "Avenir Next Condensed", sans-serif;
+  font-size: clamp(2.2rem, 4.5vw, 4.7rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.065em;
+}
+
+.account-balance-kind {
+  margin-top: 1rem;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.account-rule {
+  height: 1px;
+  background: var(--rule);
+}
+
+.account-tile-primary .account-rule {
+  background: rgb(255 255 255 / 0.35);
+}
+
+.account-details {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 1.25rem;
+  padding-top: 1.4rem;
+}
+
+.account-details dt {
+  margin-bottom: 0.45rem;
+  font-size: 0.57rem;
+  color: var(--muted);
+}
+
+.account-details dd {
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+  color: var(--soft-ink);
+}
+
+.account-tile-primary .account-details dd {
+  color: rgb(255 255 255 / 0.9);
+}
+
+.account-corner-mark {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  gap: 3px;
+  opacity: 0.45;
+}
+
+.account-corner-mark span {
+  width: 3px;
+  height: 3px;
+  background: currentColor;
+}
+
+.account-skeleton {
+  border: 1px solid var(--rule);
+  background: linear-gradient(105deg, var(--panel) 30%, #fff 45%, var(--panel) 60%);
+  background-size: 220% 100%;
+  animation: account-skeleton 1.4s ease-in-out infinite;
+}
+
+@keyframes account-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes account-skeleton {
+  to {
+    background-position-x: -220%;
+  }
+}
+
+.accounts-ledger {
+  border-top: 1px solid var(--ink);
+}
+
+.ledger-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1.25rem 3rem minmax(12rem, 1.5fr) minmax(9rem, 1fr) minmax(12rem, 1fr) 8rem;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.35rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  background: rgb(248 251 255 / 0.64);
+  text-align: left;
+}
+
+.ledger-row:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.ledger-drag-handle {
+  display: grid;
+  gap: 3px;
+  align-self: stretch;
+  align-content: center;
+  cursor: grab;
+}
+
+.ledger-drag-handle:active {
+  cursor: grabbing;
+}
+
+.ledger-drag-handle i {
+  display: block;
+  width: 1rem;
+  height: 1px;
+  background: var(--muted);
+}
+
+.ledger-row-dragging {
+  opacity: 0.4;
+}
+
+.account-order-saving {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 20;
+  padding: 0.65rem 0.85rem;
+  color: white;
+  background: var(--ink);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ledger-index,
+.ledger-secondary,
+.ledger-date,
+.ledger-bank {
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.68rem;
+}
+
+.ledger-amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.accounts-card-deck {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.bank-card {
+  display: flex;
+  min-height: 19rem;
+  flex-direction: column;
+  padding: 1.5rem;
+  border-radius: 1.25rem;
+  color: white;
+  background: var(--ink);
+  box-shadow: 0 12px 30px rgb(16 28 44 / 0.12);
+  animation: account-tile-in 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--tile-index) * 65ms);
+}
+
+.bank-card:nth-child(3n + 2) {
+  color: var(--ink);
+  background: var(--sky);
+}
+
+.bank-card:nth-child(3n + 3) {
+  background: var(--blue);
+}
+
+.bank-card-bank,
+.bank-card-currency,
+.bank-card-iban,
+.bank-card-sync {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bank-card-name {
+  margin-top: 2.5rem;
+  opacity: 0.72;
+}
+
+.bank-card-balance {
+  margin-block: auto;
+  font-family: "Arial Narrow", "Avenir Next Condensed", sans-serif;
+  font-size: clamp(2rem, 3vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+}
+
+.bank-card-sync {
+  max-width: 9rem;
+  opacity: 0.62;
+  text-align: right;
+}
+
+.currency-lanes {
+  display: grid;
+  gap: 1rem;
+}
+
+.currency-lane {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+}
+
+.currency-lane-label {
+  display: flex;
+  min-height: 10rem;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  color: white;
+  background: var(--blue);
+}
+
+.currency-lane-label span {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.currency-lane-label small,
+.currency-account p {
+  color: inherit;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.65rem;
+  opacity: 0.68;
+}
+
+.currency-lane-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.currency-account {
+  display: flex;
+  min-height: 10rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+
+.currency-account strong {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 1.15rem;
+}
+
+.accounts-compare {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.compare-row {
+  padding: 1.5rem;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+}
+
+.compare-heading {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.compare-heading > span,
+.compare-heading small,
+.compare-meta {
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.65rem;
+}
+
+.compare-heading strong {
+  font-size: clamp(1.1rem, 2.4vw, 1.75rem);
+}
+
+.compare-track {
+  height: 0.55rem;
+  margin-block: 1.25rem 0.85rem;
+  background: #dfe8f3;
+}
+
+.compare-track span {
+  display: block;
+  height: 100%;
+  background: var(--blue);
+  transition: width 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.compare-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .account-tile,
+  .account-tile-primary,
+  .account-tile-primary + .account-tile,
+  .account-skeleton {
+    grid-column: span 12;
+    grid-row: auto;
+    min-height: 23rem;
+  }
+
+  .account-tile-primary {
+    min-height: 28rem;
+  }
+
+  .accounts-card-deck {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ledger-row {
+    grid-template-columns: 1.25rem 2rem minmax(10rem, 1fr) minmax(10rem, auto);
+  }
+
+  .ledger-bank,
+  .ledger-date {
+    display: none;
+  }
+
+  .currency-lane-items {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .accounts-view-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .variant-switch {
+    width: 100%;
+  }
+
+  .variant-switch button {
+    flex: 1 0 auto;
+  }
+
+  .accounts-order {
+    justify-content: space-between;
+  }
+
+  .accounts-order select {
+    flex: 1;
+  }
+
+  .currency-lane {
+    grid-template-columns: 1fr;
+  }
+
+  .currency-lane-label {
+    min-height: auto;
+    align-items: center;
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 560px) {
+  .accounts-bento,
+  .accounts-loading-grid {
+    gap: 0.75rem;
+  }
+
+  .account-details {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .account-details > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .accounts-card-deck {
+    grid-template-columns: 1fr;
+  }
+
+  .ledger-row {
+    grid-template-columns: 1.25rem 1.75rem 1fr;
+  }
+
+  .ledger-row > div:last-of-type {
+    grid-column: 3;
+  }
+
+  .ledger-amount,
+  .ledger-secondary.text-right {
+    text-align: left;
+  }
+
+  .compare-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
 .orbit {
   position: absolute;
   width: 19rem;

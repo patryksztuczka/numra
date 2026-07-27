@@ -10,6 +10,7 @@ import {
   listBankAccountsForUser,
   listConnectionsForUser,
   markConnectFailed,
+  reorderBankAccountsForUser,
   startEnableBankingConnect,
   SUPPORTED_ASPSPS,
 } from "./connections.ts";
@@ -19,6 +20,10 @@ import { listTransactionsForUser } from "./transactions.ts";
 const startBodySchema = z.object({
   aspspName: z.string().min(1),
   aspspCountry: z.string().length(2),
+});
+
+const accountOrderBodySchema = z.object({
+  accountIds: z.array(z.string().min(1)),
 });
 
 export const financeRoutes = new Hono<AppEnv>();
@@ -168,6 +173,25 @@ financeRoutes.get("/accounts", async (context) => {
   const db = createDb(context.env);
   const items = await listBankAccountsForUser(db, user.id);
   return context.json({ accounts: items });
+});
+
+financeRoutes.patch("/accounts/order", async (context) => {
+  const parsed = accountOrderBodySchema.safeParse(await context.req.json().catch(() => null));
+  if (!parsed.success) {
+    return context.json({ error: "invalid_body", message: "accountIds must be an array." }, 400);
+  }
+
+  const user = context.get("user");
+  const db = createDb(context.env);
+  try {
+    await reorderBankAccountsForUser(db, user.id, parsed.data.accountIds);
+    return context.json({ ok: true });
+  } catch (error) {
+    if (error instanceof ConnectError) {
+      return context.json({ error: error.code, message: error.message }, 400);
+    }
+    throw error;
+  }
 });
 
 financeRoutes.get("/transactions", async (context) => {

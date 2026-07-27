@@ -15,6 +15,20 @@
       "when": 1784542607625,
       "tag": "0001_secret_yellow_claw",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785186554464,
+      "tag": "0002_square_thanos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1785187785988,
+      "tag": "0003_ancient_kang",
+      "breakpoints": true
     }
   ]
 }

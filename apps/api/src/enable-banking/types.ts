@@ -49,6 +49,21 @@ export type EnableBankingTransaction = {
   note?: string | null;
 };
 
+export type EnableBankingBalance = {
+  name?: string | null;
+  balance_amount: {
+    currency: string;
+    amount: string;
+  };
+  balance_type: string;
+  last_change_date_time?: string | null;
+  reference_date?: string | null;
+};
+
+export type EnableBankingBalancesResponse = {
+  balances: EnableBankingBalance[];
+};
+
 export type EnableBankingTransactionsPage = {
   transactions: EnableBankingTransaction[];
   continuation_key?: string | null;
@@ -85,6 +100,8 @@ export type EnableBankingClient = {
   }): Promise<EnableBankingStartAuthResponse>;
 
   createSession(code: string): Promise<EnableBankingSessionResponse>;
+
+  getBalances(input: { accountId: string }): Promise<EnableBankingBalancesResponse>;
 
   getTransactions(input: {
     accountId: string;

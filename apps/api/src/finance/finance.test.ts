@@ -33,8 +33,14 @@ const accountsBodySchema = z.object({
   accounts: z.array(
     z.object({
       id: z.string(),
+      name: z.string().nullable(),
       currency: z.string().optional(),
       ibanMasked: z.string().nullable().optional(),
+      balanceMinor: z.number().nullable(),
+      balanceCurrency: z.string().nullable(),
+      balanceType: z.string().nullable(),
+      balanceAsOf: z.string().nullable(),
+      balanceSyncedAt: z.string().nullable(),
     }),
   ),
 });
@@ -178,6 +184,29 @@ describe("finance ledger", () => {
     const accountsBody = accountsBodySchema.parse(await readJson(accountsResponse));
     expect(accountsBody.accounts).toHaveLength(2);
     expect(accountsBody.accounts[0]?.ibanMasked).toMatch(/••••/);
+    expect(accountsBody.accounts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          balanceMinor: 630_025,
+          balanceCurrency: "PLN",
+          balanceType: "CLBD",
+          balanceAsOf: "2026-03-02",
+          balanceSyncedAt: expect.any(String),
+        }),
+      ]),
+    );
+
+    const reversedIds = accountsBody.accounts.map((account) => account.id).toReversed();
+    const reorderResponse = await authedRequest("/accounts/order", cookie, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ accountIds: reversedIds }),
+    });
+    expect(reorderResponse.status).toBe(200);
+    const reorderedAccounts = accountsBodySchema.parse(
+      await readJson(await authedRequest("/accounts", cookie)),
+    );
+    expect(reorderedAccounts.accounts.map((account) => account.id)).toEqual(reversedIds);
 
     const transactionsResponse = await authedRequest("/transactions", cookie);
     expect(transactionsResponse.status).toBe(200);

@@ -6,6 +6,8 @@ export type { EnableBankingClient } from "./types.ts";
 export {
   EnableBankingApiError,
   type EnableBankingAccount,
+  type EnableBankingBalance,
+  type EnableBankingBalancesResponse,
   type EnableBankingTransaction,
   type EnableBankingTransactionsPage,
   type EnableBankingSessionResponse,

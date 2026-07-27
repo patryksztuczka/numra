@@ -4,6 +4,7 @@ import type { Env } from "../env.ts";
 import { createEnableBankingJwt } from "./jwt.ts";
 import {
   EnableBankingApiError,
+  type EnableBankingBalancesResponse,
   type EnableBankingClient,
   type EnableBankingSessionResponse,
   type EnableBankingStartAuthResponse,
@@ -68,6 +69,21 @@ const transactionSchema = z.object({
   creditor: z.object({ name: z.string().nullable().optional() }).nullable().optional(),
   debtor: z.object({ name: z.string().nullable().optional() }).nullable().optional(),
   note: z.string().nullable().optional(),
+});
+
+const balanceSchema = z.object({
+  name: z.string().nullable().optional(),
+  balance_amount: z.object({
+    currency: z.string(),
+    amount: z.string(),
+  }),
+  balance_type: z.string(),
+  last_change_date_time: z.string().nullable().optional(),
+  reference_date: z.string().nullable().optional(),
+});
+
+const balancesResponseSchema = z.object({
+  balances: z.array(balanceSchema),
 });
 
 const transactionsPageSchema = z.object({
@@ -188,6 +204,31 @@ export function createEnableBankingClient(env: Env): EnableBankingClient {
         aspsp: parsed.aspsp,
         psu_type: parsed.psu_type,
         access: parsed.access,
+      };
+      return result;
+    },
+
+    async getBalances(input) {
+      const path = `/accounts/${encodeURIComponent(input.accountId)}/balances`;
+      const body = await request(path);
+      const parsed = balancesResponseSchema.parse(body);
+      const result: EnableBankingBalancesResponse = {
+        balances: parsed.balances.map((balance) => {
+          const mapped: EnableBankingBalancesResponse["balances"][number] = {
+            balance_amount: balance.balance_amount,
+            balance_type: balance.balance_type,
+          };
+          if (balance.name !== undefined) {
+            mapped.name = balance.name;
+          }
+          if (balance.last_change_date_time !== undefined) {
+            mapped.last_change_date_time = balance.last_change_date_time;
+          }
+          if (balance.reference_date !== undefined) {
+            mapped.reference_date = balance.reference_date;
+          }
+          return mapped;
+        }),
       };
       return result;
     },

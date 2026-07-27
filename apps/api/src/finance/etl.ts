@@ -2,15 +2,21 @@ import { and, eq, inArray } from "drizzle-orm";
 
 import type { Db } from "../db/index.ts";
 import { bankAccounts, connections, transactions } from "../db/schema.ts";
-import { EnableBankingApiError, type EnableBankingClient } from "../enable-banking/index.ts";
+import {
+  EnableBankingApiError,
+  type EnableBankingBalance,
+  type EnableBankingClient,
+} from "../enable-banking/index.ts";
 import type { Env } from "../env.ts";
 import { decryptSecret } from "./crypto.ts";
+import { amountToMinorUnits } from "./money.ts";
 import { normalizeTransaction } from "./normalize.ts";
 
 export type EtlResult = {
   connectionsProcessed: number;
   transactionsUpserted: number;
   errors: Array<{ connectionId: string; message: string }>;
+  balanceErrors: Array<{ connectionId: string; accountId: string; message: string }>;
 };
 
 const DEFAULT_LOOKBACK_DAYS = 90;
@@ -52,6 +58,7 @@ export async function runLedgerEtl(input: {
     connectionsProcessed: 0,
     transactionsUpserted: 0,
     errors: [],
+    balanceErrors: [],
   };
 
   for (const connection of rows) {
@@ -88,6 +95,18 @@ export async function runLedgerEtl(input: {
       let upserted = 0;
 
       for (const account of accounts) {
+        try {
+          // oxlint-disable-next-line eslint/no-await-in-loop -- sequential per account
+          await refreshAccountBalance({ db, client, account });
+        } catch (error) {
+          // A balance failure must not block transaction ingestion. Retain the previous balance.
+          result.balanceErrors.push({
+            connectionId: connection.id,
+            accountId: account.id,
+            message: error instanceof Error ? error.message : "Unknown balance sync error",
+          });
+        }
+
         // oxlint-disable-next-line eslint/no-await-in-loop -- sequential per account
         upserted += await pullAccountTransactions({
           db,
@@ -146,6 +165,47 @@ async function markConnectionError(db: Db, connectionId: string, message: string
       updatedAt: new Date(),
     })
     .where(eq(connections.id, connectionId));
+}
+
+const BALANCE_TYPE_PRIORITY = ["CLBD", "ITAV"] as const;
+
+function selectPreferredBalance(
+  balances: EnableBankingBalance[],
+): EnableBankingBalance | undefined {
+  for (const type of BALANCE_TYPE_PRIORITY) {
+    const match = balances.find((balance) => balance.balance_type === type);
+    if (match) {
+      return match;
+    }
+  }
+  return balances[0];
+}
+
+async function refreshAccountBalance(input: {
+  db: Db;
+  client: EnableBankingClient;
+  account: typeof bankAccounts.$inferSelect;
+}): Promise<void> {
+  const response = await input.client.getBalances({
+    accountId: input.account.providerAccountId,
+  });
+  const balance = selectPreferredBalance(response.balances);
+  if (!balance) {
+    return;
+  }
+
+  const now = new Date();
+  await input.db
+    .update(bankAccounts)
+    .set({
+      balanceMinor: amountToMinorUnits(balance.balance_amount.amount),
+      balanceCurrency: balance.balance_amount.currency,
+      balanceType: balance.balance_type,
+      balanceAsOf: balance.last_change_date_time ?? balance.reference_date ?? null,
+      balanceSyncedAt: now,
+      updatedAt: now,
+    })
+    .where(eq(bankAccounts.id, input.account.id));
 }
 
 async function pullAccountTransactions(input: {

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import type { Db } from "../db/index.ts";
 import { bankAccounts, connections } from "../db/schema.ts";
@@ -227,6 +227,11 @@ export async function listBankAccountsForUser(db: Db, userId: string) {
       name: bankAccounts.name,
       currency: bankAccounts.currency,
       iban: bankAccounts.iban,
+      balanceMinor: bankAccounts.balanceMinor,
+      balanceCurrency: bankAccounts.balanceCurrency,
+      balanceType: bankAccounts.balanceType,
+      balanceAsOf: bankAccounts.balanceAsOf,
+      balanceSyncedAt: bankAccounts.balanceSyncedAt,
       aspspName: connections.aspspName,
       aspspCountry: connections.aspspCountry,
       createdAt: bankAccounts.createdAt,
@@ -234,7 +239,11 @@ export async function listBankAccountsForUser(db: Db, userId: string) {
     .from(bankAccounts)
     .innerJoin(connections, eq(bankAccounts.connectionId, connections.id))
     .where(eq(bankAccounts.userId, userId))
-    .orderBy(desc(bankAccounts.createdAt))
+    .orderBy(
+      sql`${bankAccounts.displayOrder} is null`,
+      asc(bankAccounts.displayOrder),
+      asc(bankAccounts.createdAt),
+    )
     .all();
 
   return rows.map((row) => ({
@@ -243,10 +252,48 @@ export async function listBankAccountsForUser(db: Db, userId: string) {
     name: row.name,
     currency: row.currency,
     ibanMasked: maskIban(row.iban),
+    balanceMinor: row.balanceMinor,
+    balanceCurrency: row.balanceCurrency,
+    balanceType: row.balanceType,
+    balanceAsOf: row.balanceAsOf,
+    balanceSyncedAt: row.balanceSyncedAt?.toISOString() ?? null,
     aspspName: row.aspspName,
     aspspCountry: row.aspspCountry,
     createdAt: row.createdAt.toISOString(),
   }));
+}
+
+export async function reorderBankAccountsForUser(
+  db: Db,
+  userId: string,
+  accountIds: string[],
+): Promise<void> {
+  const uniqueIds = new Set(accountIds);
+  if (uniqueIds.size !== accountIds.length) {
+    throw new ConnectError("invalid_account_order", "Account order contains duplicate ids.");
+  }
+
+  const owned = await db
+    .select({ id: bankAccounts.id })
+    .from(bankAccounts)
+    .where(eq(bankAccounts.userId, userId))
+    .all();
+  const ownedIds = new Set(owned.map((account) => account.id));
+
+  if (ownedIds.size !== accountIds.length || accountIds.some((id) => !ownedIds.has(id))) {
+    throw new ConnectError(
+      "invalid_account_order",
+      "Account order must contain every account exactly once.",
+    );
+  }
+
+  for (const [displayOrder, accountId] of accountIds.entries()) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- preserve deterministic update order
+    await db
+      .update(bankAccounts)
+      .set({ displayOrder, updatedAt: new Date() })
+      .where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, userId)));
+  }
 }
 
 export class ConnectError extends Error {

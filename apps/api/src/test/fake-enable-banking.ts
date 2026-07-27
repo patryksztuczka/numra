@@ -1,5 +1,6 @@
 import {
   EnableBankingApiError,
+  type EnableBankingBalance,
   type EnableBankingClient,
   type EnableBankingSessionResponse,
   type EnableBankingTransaction,
@@ -7,6 +8,8 @@ import {
 } from "../enable-banking/types.ts";
 
 export type FakeEnableBankingOptions = {
+  balancesByAccount?: Record<string, EnableBankingBalance[]>;
+  balancesError?: EnableBankingApiError;
   transactionsByAccount?: Record<string, EnableBankingTransaction[]>;
   /** When true, getTransactions throws an expired-session error. */
   expireOnTransactions?: boolean;
@@ -66,6 +69,16 @@ export function createFakeEnableBankingClient(
       return session;
     },
 
+    async getBalances(input) {
+      if (options.balancesError) {
+        throw options.balancesError;
+      }
+
+      return {
+        balances: options.balancesByAccount?.[input.accountId] ?? defaultBalances(input.accountId),
+      };
+    },
+
     async getTransactions(input): Promise<EnableBankingTransactionsPage> {
       if (options.transactionsError) {
         throw options.transactionsError;
@@ -99,6 +112,22 @@ export function createFakeEnableBankingClient(
       return { transactions: [], continuation_key: null };
     },
   };
+}
+
+function defaultBalances(accountId: string): EnableBankingBalance[] {
+  const currency = accountId === "eb-account-2" ? "EUR" : "PLN";
+  return [
+    {
+      balance_amount: { currency, amount: accountId === "eb-account-2" ? "2000.00" : "6421.37" },
+      balance_type: "ITAV",
+      reference_date: "2026-03-03",
+    },
+    {
+      balance_amount: { currency, amount: accountId === "eb-account-2" ? "1900.00" : "6300.25" },
+      balance_type: "CLBD",
+      reference_date: "2026-03-02",
+    },
+  ];
 }
 
 function defaultTransactions(): EnableBankingTransaction[] {

@@ -18,6 +18,10 @@ const errorBodySchema = z
   })
   .passthrough();
 
+function nullWhenMissing<T>(value: T | null | undefined): T | null {
+  return value ?? null;
+}
+
 const connectionSchema = z.object({
   id: z.string(),
   provider: z.string(),
@@ -36,6 +40,11 @@ const bankAccountSchema = z.object({
   name: z.string().nullable(),
   currency: z.string(),
   ibanMasked: z.string().nullable(),
+  balanceMinor: z.number().nullish().transform(nullWhenMissing),
+  balanceCurrency: z.string().nullish().transform(nullWhenMissing),
+  balanceType: z.string().nullish().transform(nullWhenMissing),
+  balanceAsOf: z.string().nullish().transform(nullWhenMissing),
+  balanceSyncedAt: z.string().nullish().transform(nullWhenMissing),
   aspspName: z.string(),
   aspspCountry: z.string(),
   createdAt: z.string(),
@@ -135,6 +144,13 @@ export async function fetchConnections() {
 
 export async function fetchAccounts() {
   return accountsResponseSchema.parse(await apiFetch("/accounts"));
+}
+
+export async function saveAccountOrder(accountIds: string[]): Promise<void> {
+  await apiFetch("/accounts/order", {
+    method: "PATCH",
+    body: JSON.stringify({ accountIds }),
+  });
 }
 
 export async function fetchTransactions(params?: {
