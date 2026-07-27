@@ -219,12 +219,17 @@ export async function listConnectionsForUser(db: Db, userId: string) {
   }));
 }
 
+function resolveAccountDisplayName(customName: string | null, providerName: string | null) {
+  return customName?.trim() || providerName?.trim() || "Unnamed account";
+}
+
 export async function listBankAccountsForUser(db: Db, userId: string) {
   const rows = await db
     .select({
       id: bankAccounts.id,
       connectionId: bankAccounts.connectionId,
-      name: bankAccounts.name,
+      providerName: bankAccounts.name,
+      customName: bankAccounts.customName,
       currency: bankAccounts.currency,
       iban: bankAccounts.iban,
       balanceMinor: bankAccounts.balanceMinor,
@@ -249,7 +254,9 @@ export async function listBankAccountsForUser(db: Db, userId: string) {
   return rows.map((row) => ({
     id: row.id,
     connectionId: row.connectionId,
-    name: row.name,
+    providerName: row.providerName,
+    customName: row.customName,
+    displayName: resolveAccountDisplayName(row.customName, row.providerName),
     currency: row.currency,
     ibanMasked: maskIban(row.iban),
     balanceMinor: row.balanceMinor,
@@ -261,6 +268,22 @@ export async function listBankAccountsForUser(db: Db, userId: string) {
     aspspCountry: row.aspspCountry,
     createdAt: row.createdAt.toISOString(),
   }));
+}
+
+export async function renameBankAccountForUser(
+  db: Db,
+  userId: string,
+  accountId: string,
+  customName: string | null,
+): Promise<void> {
+  const result = await db
+    .update(bankAccounts)
+    .set({ customName, updatedAt: new Date() })
+    .where(and(eq(bankAccounts.id, accountId), eq(bankAccounts.userId, userId)));
+
+  if (result.meta.changes === 0) {
+    throw new ConnectError("account_not_found", "Account not found.");
+  }
 }
 
 export async function reorderBankAccountsForUser(

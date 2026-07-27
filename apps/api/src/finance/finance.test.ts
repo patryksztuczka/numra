@@ -33,7 +33,9 @@ const accountsBodySchema = z.object({
   accounts: z.array(
     z.object({
       id: z.string(),
-      name: z.string().nullable(),
+      providerName: z.string().nullable(),
+      customName: z.string().nullable(),
+      displayName: z.string(),
       currency: z.string().optional(),
       ibanMasked: z.string().nullable().optional(),
       balanceMinor: z.number().nullable(),
@@ -49,6 +51,7 @@ const transactionsBodySchema = z.object({
   items: z.array(
     z.object({
       bankAccountId: z.string().optional(),
+      accountName: z.string().optional(),
       description: z.string().nullable().optional(),
       amountMinor: z.number().optional(),
     }),
@@ -196,6 +199,24 @@ describe("finance ledger", () => {
       ]),
     );
 
+    const renamedAccount = accountsBody.accounts[0]!;
+    const renameResponse = await authedRequest(`/accounts/${renamedAccount.id}`, cookie, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ customName: "  Daily spending  " }),
+    });
+    expect(renameResponse.status).toBe(200);
+    const renamedAccounts = accountsBodySchema.parse(
+      await readJson(await authedRequest("/accounts", cookie)),
+    );
+    expect(
+      renamedAccounts.accounts.find((account) => account.id === renamedAccount.id),
+    ).toMatchObject({
+      customName: "Daily spending",
+      displayName: "Daily spending",
+      providerName: renamedAccount.providerName,
+    });
+
     const reversedIds = accountsBody.accounts.map((account) => account.id).toReversed();
     const reorderResponse = await authedRequest("/accounts/order", cookie, {
       method: "PATCH",
@@ -213,6 +234,11 @@ describe("finance ledger", () => {
     const txBody = transactionsBodySchema.parse(await readJson(transactionsResponse));
     expect(txBody.pagination.total).toBeGreaterThanOrEqual(3);
     expect(txBody.items.some((item) => item.description?.includes("Coffee"))).toBe(true);
+    expect(
+      txBody.items.some(
+        (item) => item.bankAccountId === renamedAccount.id && item.accountName === "Daily spending",
+      ),
+    ).toBe(true);
   });
 
   it("does not duplicate transactions on a second ETL sync", async () => {

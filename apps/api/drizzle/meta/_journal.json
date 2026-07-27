@@ -29,6 +29,13 @@
       "when": 1785187785988,
       "tag": "0003_ancient_kang",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1785188298179,
+      "tag": "0004_tiresome_lord_tyger",
+      "breakpoints": true
     }
   ]
 }

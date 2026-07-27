@@ -10,6 +10,7 @@ import {
   listBankAccountsForUser,
   listConnectionsForUser,
   markConnectFailed,
+  renameBankAccountForUser,
   reorderBankAccountsForUser,
   startEnableBankingConnect,
   SUPPORTED_ASPSPS,
@@ -24,6 +25,10 @@ const startBodySchema = z.object({
 
 const accountOrderBodySchema = z.object({
   accountIds: z.array(z.string().min(1)),
+});
+
+const accountNameBodySchema = z.object({
+  customName: z.string().max(80).nullable(),
 });
 
 export const financeRoutes = new Hono<AppEnv>();
@@ -189,6 +194,30 @@ financeRoutes.patch("/accounts/order", async (context) => {
   } catch (error) {
     if (error instanceof ConnectError) {
       return context.json({ error: error.code, message: error.message }, 400);
+    }
+    throw error;
+  }
+});
+
+financeRoutes.patch("/accounts/:accountId", async (context) => {
+  const parsed = accountNameBodySchema.safeParse(await context.req.json().catch(() => null));
+  if (!parsed.success) {
+    return context.json(
+      { error: "invalid_body", message: "customName must be null or at most 80 characters." },
+      400,
+    );
+  }
+
+  const user = context.get("user");
+  const db = createDb(context.env);
+  const trimmed = parsed.data.customName?.trim() || null;
+
+  try {
+    await renameBankAccountForUser(db, user.id, context.req.param("accountId"), trimmed);
+    return context.json({ ok: true });
+  } catch (error) {
+    if (error instanceof ConnectError) {
+      return context.json({ error: error.code, message: error.message }, 404);
     }
     throw error;
   }

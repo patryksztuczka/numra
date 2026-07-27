@@ -20,6 +20,7 @@ import {
   formatDate,
   formatDateTime,
   formatMoney,
+  saveAccountCustomName,
   saveAccountOrder,
   startBankConnect,
   type AspspOption,
@@ -528,7 +529,7 @@ function AccountTile(props: { item: BankAccount; index: number }) {
             {item.aspspName} <span>{item.aspspCountry}</span>
           </p>
           <p className="mt-2 truncate text-lg font-semibold tracking-[-0.025em]">
-            {item.name?.trim() || "Unnamed account"}
+            {item.displayName}
           </p>
         </div>
         <div className="account-currency" aria-label={`Currency ${item.currency}`}>
@@ -567,71 +568,25 @@ function AccountsView(props: {
   variant: AccountsVariant;
   items: BankAccount[];
   onReorder?: (items: BankAccount[]) => void;
+  onRename?: (accountId: string, customName: string | null) => Promise<void>;
 }) {
-  const { variant, items, onReorder } = props;
+  const { variant, items, onReorder, onRename } = props;
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   if (variant === "ledger") {
     return (
       <div className="accounts-ledger">
         {items.map((item, index) => (
-          <button
+          <LedgerAccountRow
             key={item.id}
-            type="button"
-            className={`ledger-row ${draggedId === item.id ? "ledger-row-dragging" : ""}`}
-            aria-label={`Move ${item.name?.trim() || "account"}. Use arrow keys to reorder.`}
-            draggable
-            onKeyDown={(event) => {
-              const offset = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0;
-              const destination = index + offset;
-              if (offset === 0 || destination < 0 || destination >= items.length) return;
-              event.preventDefault();
-              const reordered = [...items];
-              const [moved] = reordered.splice(index, 1);
-              if (!moved) return;
-              reordered.splice(destination, 0, moved);
-              onReorder?.(reordered);
-            }}
-            onDragStart={(event) => {
-              setDraggedId(item.id);
-              event.dataTransfer.effectAllowed = "move";
-              event.dataTransfer.setData("text/plain", item.id);
-            }}
-            onDragEnd={() => setDraggedId(null)}
-            onDragOver={(event) => {
-              event.preventDefault();
-              event.dataTransfer.dropEffect = "move";
-            }}
-            onDrop={(event) => {
-              event.preventDefault();
-              const sourceId = event.dataTransfer.getData("text/plain");
-              const sourceIndex = items.findIndex((account) => account.id === sourceId);
-              if (sourceIndex < 0 || sourceIndex === index) return;
-              const reordered = [...items];
-              const [moved] = reordered.splice(sourceIndex, 1);
-              if (!moved) return;
-              reordered.splice(index, 0, moved);
-              setDraggedId(null);
-              onReorder?.(reordered);
-            }}
-          >
-            <span className="ledger-drag-handle" aria-label={`Move ${item.name ?? "account"}`}>
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="ledger-index">{String(index + 1).padStart(2, "0")}</span>
-            <div className="min-w-0">
-              <p className="font-semibold">{item.name?.trim() || "Unnamed account"}</p>
-              <p className="ledger-secondary">{item.ibanMasked ?? item.aspspName}</p>
-            </div>
-            <p className="ledger-bank">{item.aspspName}</p>
-            <div>
-              <p className="ledger-amount">{formatAccountBalance(item)}</p>
-              <p className="ledger-secondary text-right">{balanceTypeLabel(item.balanceType)}</p>
-            </div>
-            <p className="ledger-date">{formatDate(item.balanceAsOf)}</p>
-          </button>
+            item={item}
+            index={index}
+            items={items}
+            dragged={draggedId === item.id}
+            onDraggedChange={setDraggedId}
+            {...(onReorder ? { onReorder } : {})}
+            {...(onRename ? { onRename } : {})}
+          />
         ))}
       </div>
     );
@@ -646,7 +601,7 @@ function AccountsView(props: {
               <p className="bank-card-bank">{item.aspspName}</p>
               <p className="bank-card-currency">{item.currency}</p>
             </div>
-            <p className="bank-card-name">{item.name?.trim() || "Unnamed account"}</p>
+            <p className="bank-card-name">{item.displayName}</p>
             <p className="bank-card-balance">{formatAccountBalance(item)}</p>
             <div className="flex items-end justify-between gap-4">
               <p className="bank-card-iban">{item.ibanMasked ?? "No identifier"}</p>
@@ -672,7 +627,7 @@ function AccountsView(props: {
               {accounts.map((item) => (
                 <article key={item.id} className="currency-account">
                   <div>
-                    <p className="font-semibold">{item.name?.trim() || "Unnamed account"}</p>
+                    <p className="font-semibold">{item.displayName}</p>
                     <p>{item.aspspName}</p>
                   </div>
                   <div className="text-right">
@@ -699,7 +654,7 @@ function AccountsView(props: {
               <div className="compare-heading">
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <div>
-                  <p>{item.name?.trim() || "Unnamed account"}</p>
+                  <p>{item.displayName}</p>
                   <small>{item.aspspName}</small>
                 </div>
                 <strong>{formatAccountBalance(item)}</strong>
@@ -728,6 +683,163 @@ function AccountsView(props: {
   );
 }
 
+function LedgerAccountRow(props: {
+  item: BankAccount;
+  index: number;
+  items: BankAccount[];
+  dragged: boolean;
+  onDraggedChange: (id: string | null) => void;
+  onReorder?: (items: BankAccount[]) => void;
+  onRename?: (accountId: string, customName: string | null) => Promise<void>;
+}) {
+  const { item, index, items } = props;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(item.customName ?? item.displayName);
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  const save = async () => {
+    const customName = draft.trim() || null;
+    setSaving(true);
+    try {
+      await props.onRename?.(item.id, customName);
+      setEditing(false);
+    } catch {
+      // The page-level banner reports the error; keep the editor open for retry.
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the row is a drag target containing separate controls
+    <article
+      className={`ledger-row ${props.dragged ? "ledger-row-dragging" : ""}`}
+      draggable={!editing}
+      onDragStart={(event) => {
+        props.onDraggedChange(item.id);
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", item.id);
+      }}
+      onDragEnd={() => props.onDraggedChange(null)}
+      onDragOver={(event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        const sourceIndex = items.findIndex(
+          (account) => account.id === event.dataTransfer.getData("text/plain"),
+        );
+        if (sourceIndex < 0 || sourceIndex === index) return;
+        const reordered = [...items];
+        const [moved] = reordered.splice(sourceIndex, 1);
+        if (!moved) return;
+        reordered.splice(index, 0, moved);
+        props.onDraggedChange(null);
+        props.onReorder?.(reordered);
+      }}
+    >
+      <button
+        type="button"
+        className="ledger-drag-handle"
+        aria-label={`Move ${item.displayName}. Use arrow keys to reorder.`}
+        onKeyDown={(event) => {
+          const offset = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0;
+          const destination = index + offset;
+          if (offset === 0 || destination < 0 || destination >= items.length) return;
+          event.preventDefault();
+          const reordered = [...items];
+          const [moved] = reordered.splice(index, 1);
+          if (!moved) return;
+          reordered.splice(destination, 0, moved);
+          props.onReorder?.(reordered);
+        }}
+      >
+        <i />
+        <i />
+        <i />
+      </button>
+      <span className="ledger-index">{String(index + 1).padStart(2, "0")}</span>
+      <div className="min-w-0">
+        {editing ? (
+          <form
+            className="flex max-w-sm items-center gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void save();
+            }}
+          >
+            <input
+              ref={inputRef}
+              maxLength={80}
+              value={draft}
+              disabled={saving}
+              aria-label="Custom account name"
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setDraft(item.customName ?? item.displayName);
+                  setEditing(false);
+                }
+              }}
+              className="focus-ring min-w-0 flex-1 border-b border-[var(--blue)] bg-transparent px-1 py-0.5 font-semibold"
+            />
+            <button
+              type="submit"
+              disabled={saving}
+              className="font-mono text-[10px] text-[var(--blue)] uppercase"
+            >
+              {saving ? "Saving" : "Save"}
+            </button>
+            <button
+              type="button"
+              disabled={saving}
+              className="font-mono text-[10px] text-[var(--muted)] uppercase"
+              onClick={() => {
+                setDraft(item.customName ?? item.displayName);
+                setEditing(false);
+              }}
+            >
+              Cancel
+            </button>
+          </form>
+        ) : (
+          <button
+            type="button"
+            className="focus-ring group flex max-w-full items-baseline gap-2 text-left"
+            title="Rename account"
+            onClick={() => setEditing(true)}
+          >
+            <span className="truncate font-semibold">{item.displayName}</span>
+            <span
+              aria-hidden="true"
+              className="text-[10px] text-[var(--muted)] opacity-0 transition-opacity group-hover:opacity-100 group-focus:opacity-100"
+            >
+              ✎
+            </span>
+          </button>
+        )}
+        <p className="ledger-secondary">
+          {item.customName && item.providerName
+            ? item.providerName
+            : (item.ibanMasked ?? item.aspspName)}
+        </p>
+      </div>
+      <p className="ledger-bank">{item.aspspName}</p>
+      <div>
+        <p className="ledger-amount">{formatAccountBalance(item)}</p>
+        <p className="ledger-secondary text-right">{balanceTypeLabel(item.balanceType)}</p>
+      </div>
+      <p className="ledger-date">{formatDate(item.balanceAsOf)}</p>
+    </article>
+  );
+}
+
 function AccountsPage() {
   const [items, setItems] = useState<BankAccount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -743,6 +855,28 @@ function AccountsPage() {
       }
     })();
   }, []);
+
+  const onRename = async (accountId: string, customName: string | null) => {
+    setError(null);
+    try {
+      await saveAccountCustomName(accountId, customName);
+      setItems(
+        (current) =>
+          current?.map((account) =>
+            account.id === accountId
+              ? {
+                  ...account,
+                  customName,
+                  displayName: customName || account.providerName?.trim() || "Unnamed account",
+                }
+              : account,
+          ) ?? null,
+      );
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to rename account.");
+      throw caught;
+    }
+  };
 
   const onReorder = async (reordered: BankAccount[]) => {
     const previous = items;
@@ -775,7 +909,12 @@ function AccountsPage() {
           body="Accounts appear here after you connect a bank and complete consent."
         />
       ) : (
-        <AccountsView variant="ledger" items={items} onReorder={(next) => void onReorder(next)} />
+        <AccountsView
+          variant="ledger"
+          items={items}
+          onReorder={(next) => void onReorder(next)}
+          onRename={onRename}
+        />
       )}
     </div>
   );
@@ -872,7 +1011,7 @@ function TransactionsPage() {
           <option value="">All accounts</option>
           {accounts.map((account) => (
             <option key={account.id} value={account.id}>
-              {account.name ?? "Unnamed"} · {account.currency}
+              {account.displayName} · {account.currency}
             </option>
           ))}
         </select>

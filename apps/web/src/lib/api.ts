@@ -37,7 +37,9 @@ const connectionSchema = z.object({
 const bankAccountSchema = z.object({
   id: z.string(),
   connectionId: z.string(),
-  name: z.string().nullable(),
+  providerName: z.string().nullable(),
+  customName: z.string().nullable(),
+  displayName: z.string(),
   currency: z.string(),
   ibanMasked: z.string().nullable(),
   balanceMinor: z.number().nullish().transform(nullWhenMissing),
@@ -150,6 +152,16 @@ export async function saveAccountOrder(accountIds: string[]): Promise<void> {
   await apiFetch("/accounts/order", {
     method: "PATCH",
     body: JSON.stringify({ accountIds }),
+  });
+}
+
+export async function saveAccountCustomName(
+  accountId: string,
+  customName: string | null,
+): Promise<void> {
+  await apiFetch(`/accounts/${encodeURIComponent(accountId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ customName }),
   });
 }
 

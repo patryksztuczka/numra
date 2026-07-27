@@ -20,7 +20,8 @@ export async function listTransactionsForUser(
     .select({
       id: transactions.id,
       bankAccountId: transactions.bankAccountId,
-      accountName: bankAccounts.name,
+      accountProviderName: bankAccounts.name,
+      accountCustomName: bankAccounts.customName,
       accountCurrency: bankAccounts.currency,
       bookingDate: transactions.bookingDate,
       valueDate: transactions.valueDate,
@@ -51,7 +52,8 @@ export async function listTransactionsForUser(
     items: rows.map((row) => ({
       id: row.id,
       bankAccountId: row.bankAccountId,
-      accountName: row.accountName,
+      accountName:
+        row.accountCustomName?.trim() || row.accountProviderName?.trim() || "Unnamed account",
       bookingDate: row.bookingDate,
       valueDate: row.valueDate,
       amountMinor: row.amountMinor,

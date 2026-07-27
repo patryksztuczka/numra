@@ -128,7 +128,10 @@ export const bankAccounts = sqliteTable(
     providerAccountId: text("provider_account_id").notNull(),
     /** Durable cross-session identity from Enable Banking. */
     identificationHash: text("identification_hash").notNull(),
+    /** Name supplied by the bank; refreshed when the connection is renewed. */
     name: text("name"),
+    /** Optional user-supplied name; never overwritten by provider synchronization. */
+    customName: text("custom_name"),
     currency: text("currency").notNull(),
     iban: text("iban"),
     balanceMinor: integer("balance_minor"),
