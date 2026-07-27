@@ -1,0 +1,27 @@
+apps/web/src/lib/api.ts
+  s_00bf7985ebd861::t_d1724ed526f9ef 140-144,149-154
+apps/web/src/App.tsx
+  s_00bf7985ebd861::t_979198089e9689 653
+  s_00bf7985ebd861::t_d4e3afcffa6073 661
+  s_00bf7985ebd861::t_617d1ab28ebfaa 1,553-556,558-559,561-562,565-570,572-578,580-582,593-603,690-695
+  s_00bf7985ebd861::t_e24d441cde2921 592
+  s_00bf7985ebd861::t_7f206a325fd7f7 654-659
+  s_00bf7985ebd861::t_0eeb7a1cbf5581 604-614,660,662-667,669-689
+  s_00bf7985ebd861::t_dc709ed675526a 583-584,615-616,632
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "b1fdf066e316f23f2fec02ef21a067feeabf2cb6",
+  "prompts": {},
+  "sessions": {
+    "s_00bf7985ebd861": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019fa557-fe7f-79f3-b66c-fb1b69bb9613",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Patryk Sztuczka <patryk.sztuczka00@gmail.com>"
+    }
+  }
+}
