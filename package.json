@@ -5,7 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "check": "pnpm format:check && pnpm lint && pnpm deps:check && pnpm typecheck",
-    "check:fix": "pnpm lint:fix && pnpm format && syncpack fix-mismatches --dependency-types prod,dev,peer && syncpack format",
+    "check:fix": "pnpm lint:fix && syncpack fix && syncpack format && pnpm format",
     "clean": "turbo run clean && rm -rf .turbo",
     "deps:check": "syncpack lint --dependency-types prod,dev,peer",
     "dev": "turbo run dev",
@@ -14,10 +14,12 @@
     "lint": "oxlint --deny-warnings .",
     "lint:fix": "oxlint --fix --deny-warnings .",
     "prepare": "lefthook install",
+    "sdlc": "node .sdlc/src/cli.ts",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.83.0",
     "lefthook": "2.1.10",
     "oxfmt": "0.59.0",
     "oxlint": "1.74.0",

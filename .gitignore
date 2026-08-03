@@ -11,4 +11,5 @@ coverage/
 *.log
 .DS_Store
 mock-data/
+.sdlc/runs/
 
