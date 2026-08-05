@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
+import { ThemeSwitcher } from "./theme-switcher.tsx";
+
 export function AppFooter() {
   return (
     <footer className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 border-t border-[var(--rule)] px-6 py-6 font-mono text-[10px] tracking-[0.13em] text-[var(--muted)] uppercase sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-16">
@@ -23,11 +25,18 @@ export function AppShell(props: { children: ReactNode; header?: ReactNode }) {
     <main className="min-h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]">
       <div className="page-grid flex min-h-screen flex-col">
         {props.header ?? (
-          <header className="bg-[var(--ink)] text-white">
-            <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
-              <Link className="wordmark focus-ring text-white" to="/" aria-label="Numra home">
+          <header className="bg-[var(--header)] text-[var(--header-ink)]">
+            <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-4 px-6 sm:px-10 lg:px-16">
+              <Link
+                className="wordmark focus-ring text-[var(--header-ink)]"
+                to="/"
+                aria-label="Numra home"
+              >
                 NUM<span className="text-[var(--sky)]">/</span>RA
               </Link>
+              <div className="ml-auto">
+                <ThemeSwitcher />
+              </div>
             </div>
           </header>
         )}
