@@ -8,6 +8,7 @@ import {
   allowedEmails,
   bankAccounts,
   connections,
+  recurringSeries,
   sessions,
   transactions,
   users,
@@ -39,6 +40,7 @@ export function testEnv(overrides: Partial<Env> = {}): Env {
 export async function resetAuthState() {
   const db = createDb(testEnv());
 
+  await db.delete(recurringSeries);
   await db.delete(transactions);
   await db.delete(bankAccounts);
   await db.delete(connections);

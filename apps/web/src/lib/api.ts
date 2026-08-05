@@ -73,6 +73,79 @@ const aspspSchema = z.object({
   label: z.string(),
 });
 
+export const CADENCES = ["monthly", "biweekly", "weekly", "quarterly"] as const;
+export type Cadence = (typeof CADENCES)[number];
+
+export const CADENCE_LABELS: Record<Cadence, string> = {
+  monthly: "Every month",
+  biweekly: "Every two weeks",
+  weekly: "Every week",
+  quarterly: "Every quarter",
+};
+
+const recurringSeriesSchema = z.object({
+  id: z.string(),
+  bankAccountId: z.string(),
+  seedTransactionId: z.string().nullable(),
+  kind: z.string(),
+  label: z.string(),
+  counterpartyName: z.string().nullable(),
+  expectedAmountMinor: z.number(),
+  currency: z.string(),
+  cadence: z.string(),
+  startDate: z.string(),
+  endDate: z.string().nullable(),
+  accountName: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+const occurrenceSchema = z.object({
+  seriesId: z.string(),
+  label: z.string(),
+  kind: z.string(),
+  currency: z.string(),
+  counterpartyName: z.string().nullable(),
+  bankAccountId: z.string(),
+  expectedDate: z.string(),
+  expectedAmountMinor: z.number(),
+  status: z.enum(["received", "expected", "late"]),
+  transaction: z
+    .object({
+      id: z.string(),
+      bookingDate: z.string(),
+      amountMinor: z.number(),
+      currency: z.string(),
+      description: z.string().nullable(),
+    })
+    .nullable(),
+});
+
+const recurringSeriesResponseSchema = z.object({
+  series: z.array(recurringSeriesSchema),
+});
+
+const createSeriesResponseSchema = z.object({
+  series: recurringSeriesSchema,
+});
+
+const occurrencesResponseSchema = z.object({
+  range: z.object({ from: z.string(), to: z.string() }),
+  occurrences: z.array(occurrenceSchema),
+  totals: z.array(
+    z.object({
+      currency: z.string(),
+      receivedMinor: z.number(),
+      outstandingMinor: z.number(),
+      projectedMinor: z.number(),
+    }),
+  ),
+});
+
+export type RecurringSeries = z.infer<typeof recurringSeriesSchema>;
+export type RecurringOccurrence = z.infer<typeof occurrenceSchema>;
+export type OccurrencesResult = z.infer<typeof occurrencesResponseSchema>;
+
 const connectionsResponseSchema = z.object({
   connections: z.array(connectionSchema),
 });
@@ -188,6 +261,63 @@ export async function fetchTransactions(params?: {
 
 export async function fetchAspsps() {
   return aspspsResponseSchema.parse(await apiFetch("/connections/aspsps"));
+}
+
+export async function fetchRecurringSeries(kind?: "income" | "expense") {
+  const query = kind ? `?kind=${kind}` : "";
+  return recurringSeriesResponseSchema.parse(await apiFetch(`/recurring-series${query}`));
+}
+
+export async function createRecurringSeries(input: {
+  transactionId: string;
+  cadence: Cadence;
+  label?: string;
+  expectedAmountMinor?: number;
+  endDate?: string | null;
+}) {
+  return createSeriesResponseSchema.parse(
+    await apiFetch("/recurring-series", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  );
+}
+
+export async function updateRecurringSeries(
+  seriesId: string,
+  patch: {
+    label?: string;
+    expectedAmountMinor?: number;
+    cadence?: Cadence;
+    startDate?: string;
+    endDate?: string | null;
+  },
+) {
+  return createSeriesResponseSchema.parse(
+    await apiFetch(`/recurring-series/${encodeURIComponent(seriesId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
+  );
+}
+
+export async function deleteRecurringSeries(seriesId: string): Promise<void> {
+  await apiFetch(`/recurring-series/${encodeURIComponent(seriesId)}`, { method: "DELETE" });
+}
+
+export async function fetchRecurringOccurrences(params?: {
+  from?: string;
+  to?: string;
+  kind?: "income" | "expense";
+}) {
+  const search = new URLSearchParams();
+  if (params?.from) search.set("from", params.from);
+  if (params?.to) search.set("to", params.to);
+  if (params?.kind) search.set("kind", params.kind);
+  const query = search.toString();
+  return occurrencesResponseSchema.parse(
+    await apiFetch(`/recurring-occurrences${query ? `?${query}` : ""}`),
+  );
 }
 
 export async function startBankConnect(aspspName: string, aspspCountry: string) {

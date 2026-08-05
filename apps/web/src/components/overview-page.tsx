@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 
-import { fetchAccounts, type BankAccount } from "../lib/api.ts";
+import {
+  fetchAccounts,
+  fetchRecurringOccurrences,
+  type BankAccount,
+  type OccurrencesResult,
+  type RecurringOccurrence,
+} from "../lib/api.ts";
 
 type MoneyItem = {
   id: string;
@@ -18,27 +24,6 @@ type MoneyItem = {
 
 const CURRENCY = "PLN";
 const EXCLUDED_ACCOUNTS_KEY = "numra.overview.excludedAccountIds";
-
-const INITIAL_INCOME: MoneyItem[] = [
-  {
-    id: "inc-salary",
-    name: "Salary",
-    amountMinor: 720_000,
-    dueDay: 1,
-    checked: true,
-    via: "auto",
-    counterparty: "Acme Software Sp. z o.o.",
-  },
-  {
-    id: "inc-side",
-    name: "Side project",
-    amountMinor: 80_000,
-    dueDay: 20,
-    checked: false,
-    via: "manual",
-    counterparty: "Expected",
-  },
-];
 
 const INITIAL_PAYMENTS: MoneyItem[] = [
   {
@@ -142,6 +127,15 @@ function dayLabel(day: number): string {
   return `${String(day).padStart(2, "0")} Jul`;
 }
 
+/** "02 Mar" from a YYYY-MM-DD date, without touching the local timezone. */
+function occurrenceDayLabel(isoDate: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${isoDate}T00:00:00Z`));
+}
+
 function sumAmount(items: MoneyItem[], predicate: (item: MoneyItem) => boolean): number {
   return items.reduce((acc, item) => (predicate(item) ? acc + item.amountMinor : acc), 0);
 }
@@ -156,11 +150,13 @@ function sortChecklist(items: MoneyItem[]): MoneyItem[] {
 }
 
 export function OverviewPage() {
-  const [income, setIncome] = useState(INITIAL_INCOME);
   const [payments, setPayments] = useState(INITIAL_PAYMENTS);
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
   const [accountsError, setAccountsError] = useState<string | null>(null);
+  const [incomeResult, setIncomeResult] = useState<OccurrencesResult | null>(null);
+  const [incomeLoading, setIncomeLoading] = useState(true);
+  const [incomeError, setIncomeError] = useState<string | null>(null);
   const [manageAccountsOpen, setManageAccountsOpen] = useState(false);
   const [excludedAccountIds, setExcludedAccountIds] = useState<Set<string>>(() => {
     try {
@@ -190,6 +186,25 @@ export function OverviewPage() {
       })
       .finally(() => {
         if (active) setAccountsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void fetchRecurringOccurrences({ kind: "income" })
+      .then((result) => {
+        if (active) setIncomeResult(result);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setIncomeError(error instanceof Error ? error.message : "Failed to load income.");
+        }
+      })
+      .finally(() => {
+        if (active) setIncomeLoading(false);
       });
     return () => {
       active = false;
@@ -231,10 +246,16 @@ export function OverviewPage() {
   const totalBillsMinor = paidBillsMinor + unpaidBillsMinor;
   const afterBillsMinor = balanceMinor - unpaidBillsMinor;
 
-  const incomeInMinor = useMemo(() => sumAmount(income, (item) => item.checked), [income]);
-  const incomeExpectedMinor = useMemo(() => sumAmount(income, () => true), [income]);
+  const incomeOccurrences = incomeResult?.occurrences ?? [];
+  // Totals stay per-currency — the fixed-cost figures below are PLN-only mock data.
+  const primaryIncomeTotals = incomeResult?.totals.find(({ currency }) => currency === CURRENCY);
+  const otherIncomeTotals = (incomeResult?.totals ?? []).filter(
+    ({ currency }) => currency !== CURRENCY,
+  );
+  const incomeInMinor = primaryIncomeTotals?.receivedMinor ?? 0;
+  const incomeExpectedMinor = primaryIncomeTotals?.projectedMinor ?? 0;
 
-  const incomeCheckedCount = income.filter((item) => item.checked).length;
+  const incomeReceivedCount = incomeOccurrences.filter((item) => item.status === "received").length;
   const paymentsCheckedCount = payments.filter((item) => item.checked).length;
 
   const leftAfterFixedMinor = incomeInMinor - totalBillsMinor;
@@ -246,14 +267,6 @@ export function OverviewPage() {
       else next.add(id);
       return next;
     });
-  };
-
-  const toggleIncome = (id: string) => {
-    setIncome((items) =>
-      items.map((item) =>
-        item.id === id ? { ...item, checked: !item.checked, via: "manual" } : item,
-      ),
-    );
   };
 
   const togglePayment = (id: string) => {
@@ -460,7 +473,7 @@ export function OverviewPage() {
         <ChecklistCard
           kicker="Income"
           title="Received this month"
-          countLabel={`${incomeCheckedCount} / ${income.length}`}
+          countLabel={incomeLoading ? "—" : `${incomeReceivedCount} / ${incomeOccurrences.length}`}
           footer={
             <div className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-[11px] tracking-[0.04em]">
               <span>
@@ -475,17 +488,39 @@ export function OverviewPage() {
                   {formatPln(incomeExpectedMinor, { sign: "always" })}
                 </span>
               </span>
+              {otherIncomeTotals.map((total) => (
+                <span key={total.currency}>
+                  <span className="tracking-[0.14em] text-[var(--muted)] uppercase">
+                    {total.currency}{" "}
+                  </span>
+                  <span className="text-[var(--ink)] tabular-nums">
+                    {formatBalance(total.projectedMinor, total.currency)}
+                  </span>
+                </span>
+              ))}
             </div>
           }
         >
-          {sortChecklist(income).map((item) => (
-            <ChecklistRow
-              key={item.id}
-              item={item}
-              tone="income"
-              onToggle={() => toggleIncome(item.id)}
-            />
-          ))}
+          {incomeLoading ? (
+            <li className="px-4 py-6 font-mono text-[11px] text-[var(--muted)]">Loading income…</li>
+          ) : incomeError ? (
+            <li className="px-4 py-6 text-sm text-red-800">{incomeError}</li>
+          ) : incomeOccurrences.length === 0 ? (
+            <li className="px-4 py-6 text-sm text-[var(--soft-ink)]">
+              No recurring income yet. Open{" "}
+              <Link className="focus-ring text-[var(--blue)] hover:underline" to="/transactions">
+                Transactions
+              </Link>{" "}
+              and mark an incoming payment as recurring.
+            </li>
+          ) : (
+            incomeOccurrences.map((occurrence) => (
+              <OccurrenceRow
+                key={`${occurrence.seriesId}-${occurrence.expectedDate}`}
+                occurrence={occurrence}
+              />
+            ))
+          )}
         </ChecklistCard>
 
         <ChecklistCard
@@ -656,6 +691,76 @@ function ChecklistRow(props: {
           {amount}
         </span>
       </button>
+    </li>
+  );
+}
+
+/**
+ * One projected income occurrence. Not a control: the state comes from whether a
+ * real transaction matched, so there is nothing for the user to toggle.
+ */
+function OccurrenceRow(props: { occurrence: RecurringOccurrence }) {
+  const { occurrence } = props;
+  const received = occurrence.status === "received";
+  const actualMinor = occurrence.transaction?.amountMinor ?? null;
+  const variesFromExpected = actualMinor !== null && actualMinor !== occurrence.expectedAmountMinor;
+
+  return (
+    <li
+      className={`flex items-center gap-3 px-4 py-3.5 ${received ? "bg-[rgb(16_28_44_/_0.02)]" : ""}`}
+    >
+      <span
+        aria-hidden="true"
+        className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 font-mono text-[11px] leading-none ${
+          received
+            ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--on-ink)]"
+            : occurrence.status === "late"
+              ? "border-[var(--danger)] bg-white text-red-800"
+              : "border-[var(--rule)] bg-white text-transparent"
+        }`}
+      >
+        {received ? "✓" : occurrence.status === "late" ? "!" : "✓"}
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span
+            className={`text-sm font-medium tracking-[-0.01em] ${
+              received
+                ? "text-[var(--muted)] line-through decoration-[var(--rule)]"
+                : "text-[var(--ink)]"
+            }`}
+          >
+            {occurrence.label}
+          </span>
+          <span className="font-mono text-[10px] tracking-[0.12em] text-[var(--muted)] uppercase">
+            {occurrenceDayLabel(occurrence.expectedDate)}
+          </span>
+          {received ? (
+            <span className="font-mono text-[9px] tracking-[0.14em] text-[var(--blue)] uppercase">
+              auto
+            </span>
+          ) : occurrence.status === "late" ? (
+            <span className="font-mono text-[9px] tracking-[0.14em] text-red-800 uppercase">
+              not yet
+            </span>
+          ) : null}
+        </span>
+        <span className="mt-0.5 block truncate font-mono text-[11px] text-[var(--muted)]">
+          {occurrence.counterpartyName ?? "No counterparty"}
+          {variesFromExpected
+            ? ` · expected ${formatBalance(occurrence.expectedAmountMinor, occurrence.currency)}`
+            : ""}
+        </span>
+      </span>
+
+      <span
+        className={`shrink-0 font-mono text-xs tabular-nums ${
+          received ? "text-[var(--muted)]" : "text-emerald-800"
+        }`}
+      >
+        {formatBalance(actualMinor ?? occurrence.expectedAmountMinor, occurrence.currency)}
+      </span>
     </li>
   );
 }

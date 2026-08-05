@@ -16,6 +16,16 @@ import {
   SUPPORTED_ASPSPS,
 } from "./connections.ts";
 import { runLedgerEtl } from "./etl.ts";
+import {
+  createSeriesFromTransaction,
+  deleteSeriesForUser,
+  getOccurrencesForUser,
+  listSeriesForUser,
+  monthRange,
+  RecurringError,
+  todayIso,
+  updateSeriesForUser,
+} from "./recurring.ts";
 import { listTransactionsForUser } from "./transactions.ts";
 
 const startBodySchema = z.object({
@@ -30,6 +40,31 @@ const accountOrderBodySchema = z.object({
 const accountNameBodySchema = z.object({
   customName: z.string().max(80).nullable(),
 });
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a YYYY-MM-DD date.");
+const cadenceSchema = z.enum(["weekly", "biweekly", "monthly", "quarterly"]);
+const seriesKindSchema = z.enum(["income", "expense"]);
+
+const createSeriesBodySchema = z.object({
+  transactionId: z.string().min(1),
+  cadence: cadenceSchema,
+  label: z.string().max(120).nullish(),
+  expectedAmountMinor: z.number().int().positive().nullish(),
+  startDate: isoDate.nullish(),
+  endDate: isoDate.nullish(),
+});
+
+const updateSeriesBodySchema = z
+  .object({
+    label: z.string().min(1).max(120).optional(),
+    expectedAmountMinor: z.number().int().positive().optional(),
+    cadence: cadenceSchema.optional(),
+    startDate: isoDate.optional(),
+    endDate: isoDate.nullable().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "At least one field must be provided.",
+  });
 
 export const financeRoutes = new Hono<AppEnv>();
 
@@ -237,4 +272,130 @@ financeRoutes.get("/transactions", async (context) => {
   });
 
   return context.json(result);
+});
+
+function recurringErrorStatus(code: string): 400 | 404 {
+  return code === "transaction_not_found" || code === "series_not_found" ? 404 : 400;
+}
+
+financeRoutes.get("/recurring-series", async (context) => {
+  const user = context.get("user");
+  const db = createDb(context.env);
+  const kind = seriesKindSchema.safeParse(context.req.query("kind"));
+
+  const items = await listSeriesForUser(db, user.id, kind.success ? kind.data : undefined);
+  return context.json({ series: items });
+});
+
+financeRoutes.post("/recurring-series", async (context) => {
+  const parsed = createSeriesBodySchema.safeParse(await context.req.json().catch(() => null));
+  if (!parsed.success) {
+    return context.json(
+      {
+        error: "invalid_body",
+        message: "transactionId and a valid cadence are required.",
+      },
+      400,
+    );
+  }
+
+  const user = context.get("user");
+  const db = createDb(context.env);
+
+  try {
+    const series = await createSeriesFromTransaction(db, user.id, {
+      transactionId: parsed.data.transactionId,
+      cadence: parsed.data.cadence,
+      label: parsed.data.label ?? null,
+      expectedAmountMinor: parsed.data.expectedAmountMinor ?? null,
+      startDate: parsed.data.startDate ?? null,
+      endDate: parsed.data.endDate ?? null,
+    });
+    return context.json({ series }, 201);
+  } catch (error) {
+    if (error instanceof RecurringError) {
+      return context.json(
+        { error: error.code, message: error.message },
+        recurringErrorStatus(error.code),
+      );
+    }
+    throw error;
+  }
+});
+
+financeRoutes.patch("/recurring-series/:seriesId", async (context) => {
+  const parsed = updateSeriesBodySchema.safeParse(await context.req.json().catch(() => null));
+  if (!parsed.success) {
+    return context.json(
+      { error: "invalid_body", message: "Provide at least one valid field to update." },
+      400,
+    );
+  }
+
+  const user = context.get("user");
+  const db = createDb(context.env);
+
+  try {
+    const series = await updateSeriesForUser(
+      db,
+      user.id,
+      context.req.param("seriesId"),
+      parsed.data,
+    );
+    return context.json({ series });
+  } catch (error) {
+    if (error instanceof RecurringError) {
+      return context.json(
+        { error: error.code, message: error.message },
+        recurringErrorStatus(error.code),
+      );
+    }
+    throw error;
+  }
+});
+
+financeRoutes.delete("/recurring-series/:seriesId", async (context) => {
+  const user = context.get("user");
+  const db = createDb(context.env);
+
+  try {
+    await deleteSeriesForUser(db, user.id, context.req.param("seriesId"));
+    return context.json({ ok: true });
+  } catch (error) {
+    if (error instanceof RecurringError) {
+      return context.json(
+        { error: error.code, message: error.message },
+        recurringErrorStatus(error.code),
+      );
+    }
+    throw error;
+  }
+});
+
+/** Projected occurrences with their matched transactions. Defaults to this month. */
+financeRoutes.get("/recurring-occurrences", async (context) => {
+  const user = context.get("user");
+  const db = createDb(context.env);
+
+  const defaults = monthRange(todayIso());
+  const from = context.req.query("from") ?? defaults.from;
+  const to = context.req.query("to") ?? defaults.to;
+  const kind = seriesKindSchema.safeParse(context.req.query("kind"));
+
+  try {
+    const result = await getOccurrencesForUser(db, user.id, {
+      from,
+      to,
+      ...(kind.success ? { kind: kind.data } : {}),
+    });
+    return context.json(result);
+  } catch (error) {
+    if (error instanceof RecurringError) {
+      return context.json(
+        { error: error.code, message: error.message },
+        recurringErrorStatus(error.code),
+      );
+    }
+    throw error;
+  }
 });

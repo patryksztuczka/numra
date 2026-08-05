@@ -189,6 +189,43 @@ export const transactions = sqliteTable(
   ],
 );
 
+/**
+ * A user-declared recurring money movement, seeded from one real transaction.
+ *
+ * Occurrences are not stored: they are projected from `cadence` + `startDate`
+ * and matched against transactions at read time. `kind` is always "income"
+ * today; fixed costs will reuse this table unchanged.
+ */
+export const recurringSeries = sqliteTable("recurring_series", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  bankAccountId: text("bank_account_id")
+    .notNull()
+    .references(() => bankAccounts.id, { onDelete: "cascade" }),
+  /** Transaction this series was created from; kept for provenance only. */
+  seedTransactionId: text("seed_transaction_id"),
+  kind: text("kind").notNull().default("income"),
+  label: text("label").notNull(),
+  /** Match key. Null when the seed transaction had no counterparty. */
+  counterpartyName: text("counterparty_name"),
+  expectedAmountMinor: integer("expected_amount_minor").notNull(),
+  currency: text("currency").notNull(),
+  cadence: text("cadence").notNull(),
+  /** First expected occurrence, `YYYY-MM-DD`. Also the cadence anchor. */
+  startDate: text("start_date").notNull(),
+  /** Last day the series can occur, `YYYY-MM-DD`. Null means open-ended. */
+  endDate: text("end_date"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .$defaultFn(() => new Date())
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
 export const schema = {
   users,
   sessions,
@@ -198,7 +235,10 @@ export const schema = {
   connections,
   bankAccounts,
   transactions,
+  recurringSeries,
 };
 
 export type ConnectionStatus = "pending" | "active" | "error" | "expired";
 export type CreditDebit = "CRDT" | "DBIT";
+export type SeriesKind = "income" | "expense";
+export type SeriesCadence = "weekly" | "biweekly" | "monthly" | "quarterly";
