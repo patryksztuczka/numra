@@ -93,15 +93,13 @@ apps/
 
 ## Finance notes
 
-- `POST /connections/enable-banking/start` begins ASPSP consent (Mock ASPSP / PKO Bank Polski / Revolut).
-  Sandbox apps should use **Mock ASPSP** — configure accounts in the Enable Banking Control Panel → Mock ASPSP.
+- `POST /connections/enable-banking/start` begins PKO Bank Polski consent.
 - `GET /connections/enable-banking/callback` completes the session, stores
   accounts, and enqueues the ledger sync workflow (inline ETL fallback in tests).
 - `GET /connections`, `GET /accounts`, `GET /transactions` are session-scoped
   read models over D1.
-- Workflow binding `LEDGER_SYNC_WORKFLOW` runs post-connect sync. An hourly
-  cron (`0 * * * *`) needs a paid Workers plan — restore `schedules` in
-  `apps/api/wrangler.jsonc` after upgrading.
+- Workflow binding `LEDGER_SYNC_WORKFLOW` runs post-connect sync and is scheduled
+  hourly (`0 * * * *`) to refresh all active connections.
 - Money is stored as integer minor units + currency code.
 
 ## Auth notes
@@ -134,7 +132,7 @@ API:
 - `BETTER_AUTH_URL`: `https://api.numra.patryksztuczka.com`
 - `WEB_ORIGIN`: `https://numra.patryksztuczka.com`
 - D1: `numra` (`665a7fa0-943b-4e3e-b148-d95ea6496603`)
-- Workflow: `numra-ledger-sync` (no cron on free plan)
+- Workflow: `numra-ledger-sync` (hourly schedule: `0 * * * *`)
 - Secrets: `BETTER_AUTH_SECRET`, `ENABLE_BANKING_APPLICATION_ID`,
   `ENABLE_BANKING_PRIVATE_KEY`, `ENCRYPTION_KEY`
 

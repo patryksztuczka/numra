@@ -302,7 +302,7 @@ describe("finance ledger", () => {
     await authedRequest("/connections/enable-banking/start", cookie, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ aspspName: "Revolut", aspspCountry: "LT" }),
+      body: JSON.stringify({ aspspName: "PKO Bank Polski", aspspCountry: "PL" }),
     });
 
     const state = fake.started[0]!.state;
@@ -456,7 +456,7 @@ describe("finance ledger", () => {
     expect(body.connections[0]?.status).toBe("error");
   });
 
-  it("lists Mock ASPSP and starts sandbox connect with it", async () => {
+  it("lists supported banks without Mock ASPSP and starts a PKO connection", async () => {
     const fake = createFakeEnableBankingClient();
     setEnableBankingClientFactory(() => fake);
 
@@ -471,14 +471,15 @@ describe("finance ledger", () => {
         aspsps: z.array(z.object({ name: z.string(), country: z.string(), label: z.string() })),
       })
       .parse(await readJson(aspspsResponse));
-    expect(aspspsBody.aspsps.some((item) => item.name === "Mock ASPSP")).toBe(true);
+    expect(aspspsBody.aspsps.some((item) => item.name === "Mock ASPSP")).toBe(false);
+    expect(aspspsBody.aspsps.some((item) => item.name === "PKO Bank Polski")).toBe(true);
 
     const startResponse = await authedRequest("/connections/enable-banking/start", cookie, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ aspspName: "Mock ASPSP", aspspCountry: "PL" }),
+      body: JSON.stringify({ aspspName: "PKO Bank Polski", aspspCountry: "PL" }),
     });
     expect(startResponse.status).toBe(200);
-    expect(fake.started[0]?.aspsp).toEqual({ name: "Mock ASPSP", country: "PL" });
+    expect(fake.started[0]?.aspsp).toEqual({ name: "PKO Bank Polski", country: "PL" });
   });
 });

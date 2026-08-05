@@ -326,9 +326,7 @@ function StatusPill(props: { status: string }) {
 }
 
 const FALLBACK_ASPSPS: AspspOption[] = [
-  { name: "Mock ASPSP", country: "PL", label: "Mock ASPSP (sandbox)" },
   { name: "PKO Bank Polski", country: "PL", label: "PKO BP" },
-  { name: "Revolut", country: "LT", label: "Revolut" },
 ];
 
 /** Pick the most relevant stored connection for an ASPSP (active first, then newest). */
@@ -409,7 +407,7 @@ function ConnectionsPage() {
       <PageHeader
         kicker="Ledger / institutions"
         title="Connections"
-        body="Link Mock ASPSP (sandbox), PKO BP, or Revolut through Enable Banking. Numra stores the consent and runs ETL into the local ledger."
+        body="Link PKO BP through Enable Banking. Numra stores the consent and runs ETL into the local ledger."
       />
 
       {connectFlash ? (

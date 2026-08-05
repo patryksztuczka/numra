@@ -17,14 +17,12 @@
       "migrations_dir": "drizzle",
     },
   ],
-  // Hourly `schedules` require a paid Workers plan. Keep the binding so
-  // post-connect sync can still enqueue runs; trigger manually or upgrade
-  // later and restore: "schedules": ["0 * * * *"]
   "workflows": [
     {
       "name": "numra-ledger-sync",
       "binding": "LEDGER_SYNC_WORKFLOW",
       "class_name": "LedgerSyncWorkflow",
+      "schedules": ["0 * * * *"],
     },
   ],
   // Production defaults for `wrangler deploy`. Local `wrangler dev` overrides
