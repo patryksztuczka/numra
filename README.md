@@ -12,6 +12,24 @@ Numra stores connections, accounts, and transactions in D1 (the local ledger)
 and refreshes them hourly via a Cloudflare Workflow ETL. The web UI reads only
 from Numra — never live from the bank on page load.
 
+## Recurring income
+
+Recurring money is user-declared, not detected. On the transactions list, an
+incoming payment can be marked as recurring: that transaction seeds a series
+(counterparty, amount, currency, account) and its booking date becomes the
+cadence anchor. An optional end date covers income that is known to stop, such
+as a fixed-term contract.
+
+Occurrences are not stored. They are projected from cadence + start date at
+read time and matched against real transactions by counterparty and date
+proximity (±5 days), never by amount — so a bonus or a raise still counts as
+the month it belongs to. Each transaction is claimed by at most one occurrence.
+An occurrence is `received` once matched, `late` once past its grace window,
+and `expected` otherwise.
+
+The `recurring_series` table carries a `kind` column (`income` today) so fixed
+costs can reuse the same projection and matching without a schema change.
+
 ## Requirements
 
 - Node.js 26.4.0

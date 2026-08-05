@@ -13,9 +13,14 @@ import { LegalPage } from "./components/legal-page.tsx";
 import { NavBar, type AuthMode } from "./components/navbar.tsx";
 import { OverviewPage } from "./components/overview-page.tsx";
 import {
+  CADENCE_LABELS,
+  CADENCES,
+  createRecurringSeries,
+  deleteRecurringSeries,
   fetchAccounts,
   fetchAspsps,
   fetchConnections,
+  fetchRecurringSeries,
   fetchTransactions,
   formatDate,
   formatDateTime,
@@ -25,8 +30,10 @@ import {
   startBankConnect,
   type AspspOption,
   type BankAccount,
+  type Cadence,
   type Connection,
   type LedgerTransaction,
+  type RecurringSeries,
 } from "./lib/api.ts";
 import { authClient } from "./lib/auth-client.ts";
 
@@ -923,10 +930,12 @@ function AccountsPage() {
 function TransactionsPage() {
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [items, setItems] = useState<LedgerTransaction[] | null>(null);
+  const [series, setSeries] = useState<RecurringSeries[]>([]);
   const [accountId, setAccountId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [markingId, setMarkingId] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const requestIdRef = useRef(0);
 
@@ -936,8 +945,9 @@ function TransactionsPage() {
     if (offset > 0) setLoadingMore(true);
 
     try {
-      const [accountsResult, txResult] = await Promise.all([
+      const [accountsResult, seriesResult, txResult] = await Promise.all([
         offset === 0 ? fetchAccounts() : Promise.resolve(null),
+        offset === 0 ? fetchRecurringSeries() : Promise.resolve(null),
         fetchTransactions({
           ...(filterAccountId ? { accountId: filterAccountId } : {}),
           limit: 50,
@@ -947,6 +957,7 @@ function TransactionsPage() {
 
       if (requestId !== requestIdRef.current) return;
       if (accountsResult) setAccounts(accountsResult.accounts);
+      if (seriesResult) setSeries(seriesResult.series);
       setItems((current) =>
         offset === 0 ? txResult.items : [...(current ?? []), ...txResult.items],
       );
@@ -959,6 +970,22 @@ function TransactionsPage() {
       if (requestId === requestIdRef.current) setLoadingMore(false);
     }
   }, []);
+
+  const seriesBySeedTransaction = new Map(
+    series
+      .filter((item) => item.seedTransactionId !== null)
+      .map((item) => [item.seedTransactionId, item] as const),
+  );
+
+  const removeSeries = async (seriesId: string) => {
+    setError(null);
+    try {
+      await deleteRecurringSeries(seriesId);
+      setSeries((current) => current.filter((item) => item.id !== seriesId));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to remove the series.");
+    }
+  };
 
   useEffect(() => {
     void load();
@@ -1037,31 +1064,74 @@ function TransactionsPage() {
 
               <div className="border-x border-t border-[var(--rule)] bg-white">
                 {transactions.map((item) => (
-                  <article
-                    key={item.id}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 border-b border-[var(--rule)] px-4 py-4 sm:grid-cols-[minmax(9rem,0.45fr)_minmax(0,1fr)_auto] sm:items-center"
-                  >
-                    <p className="truncate text-xs text-[var(--soft-ink)] sm:text-sm">
-                      {item.accountName ?? "Account"}
-                    </p>
-                    <div className="min-w-0 sm:row-start-1">
-                      <p className="truncate text-sm font-medium">{item.description ?? "—"}</p>
-                      {item.counterpartyName ? (
-                        <p className="truncate font-mono text-[11px] text-[var(--muted)]">
-                          {item.counterpartyName}
-                        </p>
-                      ) : null}
-                    </div>
-                    <p
-                      className={`col-start-2 row-span-2 row-start-1 self-center text-right font-mono text-xs whitespace-nowrap sm:col-start-3 ${
-                        item.signedAmountMinor < 0
-                          ? "text-[var(--danger)]"
-                          : "text-[var(--positive)]"
-                      }`}
-                    >
-                      {formatMoney(item.signedAmountMinor, item.currency)}
-                    </p>
-                  </article>
+                  <div key={item.id} className="border-b border-[var(--rule)]">
+                    <article className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 px-4 py-4 sm:grid-cols-[minmax(9rem,0.45fr)_minmax(0,1fr)_auto] sm:items-center">
+                      <p className="truncate text-xs text-[var(--soft-ink)] sm:text-sm">
+                        {item.accountName ?? "Account"}
+                      </p>
+                      <div className="min-w-0 sm:row-start-1">
+                        <p className="truncate text-sm font-medium">{item.description ?? "—"}</p>
+                        {item.counterpartyName ? (
+                          <p className="truncate font-mono text-[11px] text-[var(--muted)]">
+                            {item.counterpartyName}
+                          </p>
+                        ) : null}
+                        {item.creditDebit === "CRDT" ? (
+                          seriesBySeedTransaction.has(item.id) ? (
+                            <p className="mt-1 flex flex-wrap items-center gap-x-3 font-mono text-[10px] tracking-[0.14em] uppercase">
+                              <span className="text-[var(--blue)]">
+                                Recurring ·{" "}
+                                {cadenceLabel(seriesBySeedTransaction.get(item.id)?.cadence ?? "")}
+                              </span>
+                              <button
+                                type="button"
+                                className="focus-ring text-[var(--muted)] hover:underline"
+                                onClick={() => {
+                                  const seriesId = seriesBySeedTransaction.get(item.id)?.id;
+                                  if (seriesId) {
+                                    void removeSeries(seriesId);
+                                  }
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              className="focus-ring mt-1 font-mono text-[10px] tracking-[0.14em] text-[var(--blue)] uppercase hover:underline"
+                              aria-expanded={markingId === item.id}
+                              onClick={() =>
+                                setMarkingId((current) => (current === item.id ? null : item.id))
+                              }
+                            >
+                              {markingId === item.id ? "Cancel" : "Mark as recurring"}
+                            </button>
+                          )
+                        ) : null}
+                      </div>
+                      <p
+                        className={`col-start-2 row-span-2 row-start-1 self-center text-right font-mono text-xs whitespace-nowrap sm:col-start-3 ${
+                          item.signedAmountMinor < 0
+                            ? "text-[var(--danger)]"
+                            : "text-[var(--positive)]"
+                        }`}
+                      >
+                        {formatMoney(item.signedAmountMinor, item.currency)}
+                      </p>
+                    </article>
+
+                    {markingId === item.id ? (
+                      <RecurringSeriesForm
+                        transaction={item}
+                        onCancel={() => setMarkingId(null)}
+                        onCreated={(created) => {
+                          setSeries((current) => [...current, created]);
+                          setMarkingId(null);
+                        }}
+                      />
+                    ) : null}
+                  </div>
                 ))}
               </div>
             </section>
@@ -1073,6 +1143,169 @@ function TransactionsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function cadenceLabel(cadence: string): string {
+  const known = CADENCES.find((option) => option === cadence);
+  return known ? CADENCE_LABELS[known] : "Repeating";
+}
+
+/** Decimal string ("7200", "7200.5", "7200,50") to integer minor units. */
+function parseAmountToMinor(value: string): number | null {
+  const match = /^(\d+)(?:[.,](\d{1,2}))?$/.exec(value.trim().replace(/\s/g, ""));
+  if (!match) {
+    return null;
+  }
+  const whole = Number.parseInt(match[1] ?? "0", 10);
+  const fraction = Number.parseInt(((match[2] ?? "") + "00").slice(0, 2), 10);
+  return whole * 100 + fraction;
+}
+
+function minorToAmountInput(minor: number): string {
+  return `${Math.floor(Math.abs(minor) / 100)}.${String(Math.abs(minor) % 100).padStart(2, "0")}`;
+}
+
+/**
+ * Declares a recurring series seeded from one transaction. The cadence anchor is
+ * the seed transaction's booking date; "until" is optional and open-ended by default.
+ */
+function RecurringSeriesForm(props: {
+  transaction: LedgerTransaction;
+  onCancel: () => void;
+  onCreated: (series: RecurringSeries) => void;
+}) {
+  const { transaction } = props;
+  const [label, setLabel] = useState(
+    transaction.counterpartyName?.trim() || transaction.description?.trim() || "",
+  );
+  const [amount, setAmount] = useState(minorToAmountInput(transaction.amountMinor));
+  const [cadence, setCadence] = useState<Cadence>("monthly");
+  const [endDate, setEndDate] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const expectedAmountMinor = parseAmountToMinor(amount);
+
+    if (expectedAmountMinor === null || expectedAmountMinor <= 0) {
+      setError("Enter an amount like 7200.00.");
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+
+    try {
+      const result = await createRecurringSeries({
+        transactionId: transaction.id,
+        cadence,
+        expectedAmountMinor,
+        ...(label.trim() ? { label: label.trim() } : {}),
+        endDate: endDate || null,
+      });
+      props.onCreated(result.series);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to save.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={(event) => void onSubmit(event)}
+      className="border-t border-[var(--rule)] bg-[var(--panel)] px-4 py-4"
+    >
+      <p className="mb-3 font-mono text-[10px] tracking-[0.16em] text-[var(--muted)] uppercase">
+        Recurring income · anchored to {formatDate(transaction.bookingDate)}
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-mono text-[10px] tracking-[0.14em] text-[var(--muted)] uppercase">
+            Name
+          </span>
+          <input
+            className="focus-ring border border-[var(--rule)] bg-white px-3 py-2"
+            value={label}
+            maxLength={120}
+            placeholder="Salary"
+            onChange={(event) => setLabel(event.target.value)}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-mono text-[10px] tracking-[0.14em] text-[var(--muted)] uppercase">
+            Expected amount · {transaction.currency}
+          </span>
+          <input
+            className="focus-ring border border-[var(--rule)] bg-white px-3 py-2 font-mono tabular-nums"
+            inputMode="decimal"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-mono text-[10px] tracking-[0.14em] text-[var(--muted)] uppercase">
+            Repeats
+          </span>
+          <select
+            className="focus-ring border border-[var(--rule)] bg-white px-3 py-2"
+            value={cadence}
+            onChange={(event) => {
+              const selected = CADENCES.find((option) => option === event.target.value);
+              if (selected) {
+                setCadence(selected);
+              }
+            }}
+          >
+            {CADENCES.map((option) => (
+              <option key={option} value={option}>
+                {CADENCE_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-mono text-[10px] tracking-[0.14em] text-[var(--muted)] uppercase">
+            Until · optional
+          </span>
+          <input
+            type="date"
+            className="focus-ring border border-[var(--rule)] bg-white px-3 py-2 font-mono"
+            value={endDate}
+            min={transaction.bookingDate}
+            onChange={(event) => setEndDate(event.target.value)}
+          />
+        </label>
+      </div>
+
+      {error ? <p className="mt-3 text-sm text-[var(--danger)]">{error}</p> : null}
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={busy}
+          className="focus-ring border border-[var(--ink)] bg-[var(--ink)] px-4 py-2 font-mono text-[11px] tracking-[0.14em] text-[var(--on-ink)] uppercase disabled:opacity-60"
+        >
+          {busy ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={props.onCancel}
+          className="focus-ring font-mono text-[11px] tracking-[0.14em] text-[var(--muted)] uppercase hover:underline"
+        >
+          Cancel
+        </button>
+        <span className="font-mono text-[11px] text-[var(--muted)]">
+          Leave “until” empty for open-ended income.
+        </span>
+      </div>
+    </form>
   );
 }
 
