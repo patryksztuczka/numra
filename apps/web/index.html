@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#edf3fa" />
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem("numra.theme");
+          const preference = ["light", "dark", "system"].includes(stored) ? stored : "system";
+          const theme =
+            preference === "system"
+              ? matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : preference;
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.dataset.themePreference = preference;
+          document.querySelector('meta[name="theme-color"]').content =
+            theme === "dark" ? "#09111d" : "#edf3fa";
+        } catch {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
     <meta
       name="description"
       content="Numra helps you control your personal finances — balances, spending, and accounts in one clear place."

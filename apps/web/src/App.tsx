@@ -276,7 +276,7 @@ function AuthPanel(props: {
           <button
             type="submit"
             disabled={props.busy}
-            className="focus-ring mt-2 flex w-fit items-center gap-8 bg-[var(--ink)] px-5 py-3 font-mono text-xs tracking-[0.12em] text-white uppercase transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60"
+            className="focus-ring mt-2 flex w-fit items-center gap-8 bg-[var(--ink)] px-5 py-3 font-mono text-xs tracking-[0.12em] text-[var(--on-ink)] uppercase transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60"
           >
             {props.busy ? "Working" : props.mode === "sign-up" ? "Create account" : "Sign in"}
             <span aria-hidden="true">↗</span>
@@ -289,7 +289,7 @@ function AuthPanel(props: {
 
 function ErrorBanner(props: { message: string }) {
   return (
-    <p className="border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+    <p className="border border-[var(--danger-rule)] bg-[var(--danger-bg)] px-3 py-2 text-sm text-[var(--danger)]">
       {props.message}
     </p>
   );
@@ -309,12 +309,12 @@ function EmptyState(props: { title: string; body: string }) {
 function StatusPill(props: { status: string }) {
   const tone =
     props.status === "active"
-      ? "bg-emerald-100 text-emerald-900"
+      ? "bg-[var(--positive-bg)] text-[var(--positive)]"
       : props.status === "pending"
-        ? "bg-amber-100 text-amber-900"
+        ? "bg-[var(--warning-bg)] text-[var(--warning)]"
         : props.status === "expired"
-          ? "bg-orange-100 text-orange-900"
-          : "bg-red-100 text-red-900";
+          ? "bg-[var(--expired-bg)] text-[var(--expired)]"
+          : "bg-[var(--danger-bg)] text-[var(--danger)]";
 
   return (
     <span
@@ -414,8 +414,8 @@ function ConnectionsPage() {
         <p
           className={`border px-3 py-2 text-sm ${
             connectStatus === "success"
-              ? "border-emerald-300 bg-emerald-50 text-emerald-900"
-              : "border-red-300 bg-red-50 text-red-800"
+              ? "border-[var(--positive-rule)] bg-[var(--positive-bg)] text-[var(--positive)]"
+              : "border-[var(--danger-rule)] bg-[var(--danger-bg)] text-[var(--danger)]"
           }`}
         >
           {connectFlash}
@@ -466,14 +466,16 @@ function ConnectionsPage() {
                     <td className="px-4 py-3 text-[var(--soft-ink)]">
                       {formatDateTime(connection?.lastSyncedAt ?? null)}
                     </td>
-                    <td className="px-4 py-3 text-red-800">{connection?.lastError ?? "—"}</td>
+                    <td className="px-4 py-3 text-[var(--danger)]">
+                      {connection?.lastError ?? "—"}
+                    </td>
                     <td className="px-4 py-3 text-right">
                       {isActive ? null : (
                         <button
                           type="button"
                           disabled={busyKey !== null}
                           onClick={() => void onConnect(aspsp)}
-                          className="focus-ring bg-[var(--ink)] px-4 py-2 font-mono text-[10px] tracking-[0.12em] text-white uppercase disabled:opacity-60"
+                          className="focus-ring bg-[var(--ink)] px-4 py-2 font-mono text-[10px] tracking-[0.12em] text-[var(--on-ink)] uppercase disabled:opacity-60"
                         >
                           {isBusy ? "Redirecting…" : connection ? "Reconnect" : "Connect"}
                         </button>
@@ -1052,7 +1054,9 @@ function TransactionsPage() {
                     </div>
                     <p
                       className={`col-start-2 row-span-2 row-start-1 self-center text-right font-mono text-xs whitespace-nowrap sm:col-start-3 ${
-                        item.signedAmountMinor < 0 ? "text-red-800" : "text-emerald-800"
+                        item.signedAmountMinor < 0
+                          ? "text-[var(--danger)]"
+                          : "text-[var(--positive)]"
                       }`}
                     >
                       {formatMoney(item.signedAmountMinor, item.currency)}

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 
 import { App } from "./App.tsx";
+import { ThemeProvider } from "./lib/theme.tsx";
 import { Sentry } from "./sentry.ts";
 
 import "./styles.css";
@@ -16,9 +17,11 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <Sentry.ErrorBoundary fallback={<p>Something went wrong.</p>}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ThemeProvider>
     </Sentry.ErrorBoundary>
   </StrictMode>,
 );

@@ -575,7 +575,7 @@ function ChecklistCard(props: {
           </p>
           <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] uppercase">{props.title}</h2>
         </div>
-        <span className="shrink-0 border border-[var(--ink)] bg-[var(--ink)] px-2 py-1 font-mono text-[10px] tracking-[0.14em] text-white uppercase tabular-nums">
+        <span className="shrink-0 border border-[var(--ink)] bg-[var(--ink)] px-2 py-1 font-mono text-[10px] tracking-[0.14em] text-[var(--on-ink)] uppercase tabular-nums">
           {props.countLabel}
         </span>
       </header>
@@ -612,7 +612,7 @@ function ChecklistRow(props: {
           aria-hidden="true"
           className={`flex h-5 w-5 shrink-0 items-center justify-center border-2 font-mono text-[11px] leading-none ${
             item.checked
-              ? "border-[var(--ink)] bg-[var(--ink)] text-white"
+              ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--on-ink)]"
               : "border-[var(--rule)] bg-white text-transparent"
           }`}
         >

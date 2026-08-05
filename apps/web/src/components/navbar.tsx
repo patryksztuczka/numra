@@ -1,6 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 
+import { ThemeSwitcher } from "./theme-switcher.tsx";
+
 export type NavPage = "overview" | "accounts" | "transactions" | "connections";
 export type AuthMode = "sign-in" | "sign-up";
 
@@ -117,7 +119,7 @@ function UserMenuCard(props: {
   return (
     <div
       role="menu"
-      className="account-menu absolute top-[calc(100%+0.55rem)] right-0 z-40 w-64 origin-top-right border border-[rgb(255_255_255_/_0.12)] bg-[var(--ink)] p-3 text-white shadow-[0_18px_50px_rgb(0_0_0_/_0.35)]"
+      className="account-menu absolute top-[calc(100%+0.55rem)] right-0 z-40 w-64 origin-top-right border border-[rgb(255_255_255_/_0.12)] bg-[var(--header)] p-3 text-[var(--header-ink)] shadow-[0_18px_50px_rgb(0_0_0_/_0.35)]"
     >
       <div className="account-menu-item min-w-0 border-b border-white/10 pb-3">
         <p className="truncate text-sm font-semibold tracking-[-0.01em]">
@@ -244,7 +246,7 @@ function PillTabs<T extends string>(props: {
 
 function Wordmark() {
   return (
-    <Link className="wordmark focus-ring text-white" to="/" aria-label="Numra home">
+    <Link className="wordmark focus-ring text-[var(--header-ink)]" to="/" aria-label="Numra home">
       NUM<span className="text-[var(--sky)]">/</span>RA
     </Link>
   );
@@ -257,13 +259,13 @@ function AppNavBar(props: AppNavBarProps) {
   const page = pathToPage(location.pathname);
 
   return (
-    <header className="bg-[var(--ink)] text-white">
-      <div className="relative mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
+    <header className="bg-[var(--header)] text-[var(--header-ink)]">
+      <div className="app-header-inner relative mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
         <div className="z-10">
           <Wordmark />
         </div>
         <nav
-          className="pointer-events-none absolute inset-x-0 flex justify-center"
+          className="primary-nav pointer-events-none absolute inset-x-0 flex justify-center"
           aria-label="Primary"
         >
           <div className="pointer-events-auto">
@@ -280,7 +282,8 @@ function AppNavBar(props: AppNavBarProps) {
             />
           </div>
         </nav>
-        <div className="relative z-10 ml-auto" ref={menu.rootRef}>
+        <div className="relative z-10 ml-auto flex items-center gap-2" ref={menu.rootRef}>
+          <ThemeSwitcher />
           <button
             type="button"
             aria-haspopup="menu"
@@ -317,19 +320,22 @@ function AppNavBar(props: AppNavBarProps) {
 
 function AuthNavBar(props: AuthNavBarProps) {
   return (
-    <header className="bg-[var(--ink)] text-white">
-      <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
+    <header className="bg-[var(--header)] text-[var(--header-ink)]">
+      <div className="auth-header-inner relative mx-auto flex h-16 w-full max-w-[1440px] items-center px-6 sm:px-10 lg:px-16">
         <div className="z-10">
           <Wordmark />
         </div>
-        <nav className="z-10 ml-auto" aria-label="Authentication">
-          <PillTabs
-            items={AUTH_ITEMS}
-            active={props.mode}
-            onSelect={props.onModeChange}
-            label="Authentication"
-          />
-        </nav>
+        <div className="auth-header-actions z-10 ml-auto flex items-center gap-2">
+          <ThemeSwitcher />
+          <nav aria-label="Authentication">
+            <PillTabs
+              items={AUTH_ITEMS}
+              active={props.mode}
+              onSelect={props.onModeChange}
+              label="Authentication"
+            />
+          </nav>
+        </div>
       </div>
     </header>
   );
